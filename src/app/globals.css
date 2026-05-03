@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-cormorant);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* 3:4 비율 고정 컨테이너 유틸리티 */
+.aspect-3-4 {
+  aspect-ratio: 3 / 4;
+}
