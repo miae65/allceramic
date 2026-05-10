@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import type { Area } from 'react-easy-crop'
 import { CropEditor } from './CropEditor'
 import { XMarkIcon } from '@/components/ui/icons'
 import { getCroppedImg } from '@/lib/utils/cropImage'
+import { createClient } from '@/lib/supabase/client'
 
 type Step = 'select' | 'crop' | 'caption' | 'submitting'
 
@@ -14,6 +16,7 @@ type Props = {
 }
 
 export function UploadModal({ onClose }: Props) {
+  const router = useRouter()
   const [step, setStep] = useState<Step>('select')
   const [rawUrls, setRawUrls] = useState<string[]>([])
   const [cropIndex, setCropIndex] = useState(0)
@@ -21,16 +24,15 @@ export function UploadModal({ onClose }: Props) {
   const [croppedUrls, setCroppedUrls] = useState<string[]>([])
   const [caption, setCaption] = useState('')
   const [dragging, setDragging] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // ESC 닫기
   useEffect(() => {
     const handler = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [onClose])
 
-  // object URL 정리
   useEffect(() => {
     return () => {
       rawUrls.forEach(URL.revokeObjectURL)
@@ -66,39 +68,73 @@ export function UploadModal({ onClose }: Props) {
 
   const onSubmit = async () => {
     setStep('submitting')
-    /*
-     * TODO: Supabase 연결 후 교체
-     *
-     * const supabase = createClient()
-     * const { data: { user } } = await supabase.auth.getUser()
-     *
-     * const { data: post } = await supabase.from('posts')
-     *   .insert({ user_id: user!.id, caption })
-     *   .select('id').single()
-     *
-     * await Promise.all(croppedBlobs.map(async (blob, i) => {
-     *   const path = `${user!.id}/${post.id}/${i}.jpg`
-     *   await supabase.storage.from('post-images').upload(path, blob)
-     *   const { data: { publicUrl } } = supabase.storage.from('post-images').getPublicUrl(path)
-     *   await supabase.from('post_images').insert({ post_id: post.id, url: publicUrl, position: i })
-     * }))
-     *
-     * router.push(`/post/${post.id}`)
-     */
-    await new Promise(r => setTimeout(r, 800)) // mock delay
-    onClose()
+    setError(null)
+
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('로그인이 필요합니다')
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = supabase as any
+
+      // 1. 프로필 확인
+      const { data: profile } = await db
+        .from('profiles')
+        .select('id, username')
+        .eq('id', user.id)
+        .single()
+
+      if (!profile) throw new Error('프로필을 찾을 수 없습니다')
+
+      // 2. 게시물 생성
+      const { data: post, error: postError } = await db
+        .from('posts')
+        .insert({ user_id: user.id, caption: caption.trim() || null })
+        .select('id')
+        .single()
+
+      if (postError || !post) throw new Error('게시물 생성 실패')
+
+      // 3. 이미지 업로드
+      const imageUrls: string[] = []
+      for (let i = 0; i < croppedBlobs.length; i++) {
+        const blob = croppedBlobs[i]
+        const path = `${user.id}/${post.id}/${i}.jpg`
+        const { error: uploadError } = await supabase.storage
+          .from('post-images')
+          .upload(path, blob, { contentType: 'image/jpeg', upsert: true })
+
+        if (uploadError) throw new Error(`이미지 업로드 실패: ${uploadError.message}`)
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('post-images')
+          .getPublicUrl(path)
+
+        imageUrls.push(publicUrl)
+      }
+
+      // 4. post_images 레코드 생성
+      await db.from('post_images').insert(
+        imageUrls.map((url: string, position: number) => ({ post_id: post.id, url, position }))
+      )
+
+      onClose()
+      router.push(`/profile/${profile.username}`)
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '업로드 중 오류가 발생했습니다')
+      setStep('caption')
+    }
   }
 
   const modalHeight = step === 'select' ? 'h-auto' : 'h-[560px]'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* 백드롭 */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
-      {/* 모달 */}
       <div className={`relative bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden ${modalHeight}`}>
-        {/* 헤더 */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100 flex-shrink-0">
           <p className="font-serif text-base tracking-widest text-stone-900">
             {step === 'select' && 'New Post'}
@@ -111,7 +147,6 @@ export function UploadModal({ onClose }: Props) {
           </button>
         </div>
 
-        {/* --- Step: select --- */}
         {step === 'select' && (
           <div className="p-6">
             <div
@@ -144,7 +179,6 @@ export function UploadModal({ onClose }: Props) {
           </div>
         )}
 
-        {/* --- Step: crop --- */}
         {step === 'crop' && rawUrls[cropIndex] && (
           <div className="flex-1 flex flex-col overflow-hidden">
             <CropEditor
@@ -157,19 +191,16 @@ export function UploadModal({ onClose }: Props) {
           </div>
         )}
 
-        {/* --- Step: caption --- */}
         {step === 'caption' && (
           <div className="flex-1 flex flex-col overflow-hidden">
-            {/* 크롭된 이미지 미리보기 */}
             <div className="flex gap-2 p-4 overflow-x-auto flex-shrink-0 border-b border-stone-100">
               {croppedUrls.map((url, i) => (
-                <div key={i} className="w-20 h-[calc(20px*4/3*4)] flex-shrink-0 relative overflow-hidden rounded-md bg-stone-200" style={{ height: '106px' }}>
+                <div key={i} className="w-20 flex-shrink-0 relative overflow-hidden rounded-md bg-stone-200" style={{ height: '106px' }}>
                   <Image src={url} alt="" fill className="object-cover" />
                 </div>
               ))}
             </div>
 
-            {/* 캡션 입력 */}
             <div className="flex-1 p-4">
               <textarea
                 value={caption}
@@ -180,7 +211,10 @@ export function UploadModal({ onClose }: Props) {
               />
             </div>
 
-            {/* 글자 수 + 제출 */}
+            {error && (
+              <p className="px-4 pb-2 text-xs text-red-500">{error}</p>
+            )}
+
             <div className="px-4 py-3 border-t border-stone-100 flex items-center justify-between flex-shrink-0">
               <span className="text-xs text-stone-400 tabular-nums">{caption.length} / 500</span>
               <button
@@ -193,7 +227,6 @@ export function UploadModal({ onClose }: Props) {
           </div>
         )}
 
-        {/* --- Step: submitting --- */}
         {step === 'submitting' && (
           <div className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center gap-3">
