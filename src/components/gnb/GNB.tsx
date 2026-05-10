@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -70,6 +70,56 @@ export function GNB() {
   )
 }
 
+function ProfileDropdown({
+  username,
+  avatarUrl,
+  onSignOut,
+}: {
+  username: string
+  avatarUrl?: string
+  onSignOut: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-label="프로필 메뉴"
+        className="hover:opacity-80 transition-opacity"
+      >
+        {avatarUrl ? (
+          <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-stone-200">
+            <Image src={avatarUrl} alt={username} width={28} height={28} className="object-cover w-full h-full" />
+          </div>
+        ) : (
+          <UserIcon className="w-5 h-5 text-stone-500" />
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-10 w-36 bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden z-50">
+          <button
+            onClick={() => { setOpen(false); onSignOut() }}
+            className="w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
+          >
+            로그아웃
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function AuthButtons({
   onUploadClick,
   onAuthRequired,
@@ -95,19 +145,7 @@ function AuthButtons({
 
     return (
       <>
-        <Link
-          href={`/profile/${username}`}
-          aria-label="마이페이지"
-          className="hover:opacity-80 transition-opacity"
-        >
-          {avatarUrl ? (
-            <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-stone-200">
-              <Image src={avatarUrl} alt={username} width={28} height={28} className="object-cover w-full h-full" />
-            </div>
-          ) : (
-            <UserIcon className="w-5 h-5 text-stone-500" />
-          )}
-        </Link>
+        <ProfileDropdown username={username} avatarUrl={avatarUrl} onSignOut={signOut} />
         <button
           onClick={onUploadClick}
           aria-label="게시물 업로드"
@@ -115,9 +153,9 @@ function AuthButtons({
         >
           <PlusIcon className="w-5 h-5" />
         </button>
-        <button onClick={signOut} className="hover:text-stone-900 transition-colors">
-          로그아웃
-        </button>
+        <Link href={`/profile/${username}`} className="hover:text-stone-900 transition-colors">
+          마이페이지
+        </Link>
       </>
     )
   }
