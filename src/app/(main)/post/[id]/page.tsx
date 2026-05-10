@@ -1,80 +1,60 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { notFound } from 'next/navigation'
 import { PostViewer } from '@/components/post/PostViewer'
 import { PostActions } from '@/components/post/PostActions'
 import { CommentSection } from '@/components/post/CommentSection'
+import { DeletePostButton } from '@/components/post/DeletePostButton'
 import { ChevronLeftIcon } from '@/components/ui/icons'
-import { MOCK_POSTS } from '@/lib/mock/posts'
-import type { Comment } from '@/types'
+import { createClient } from '@/lib/supabase/server'
+import type { Post, Comment } from '@/types'
 
-const MOCK_COMMENTS: Comment[] = [
-  {
-    id: 'c1',
-    post_id: '',
-    user_id: 'user-2',
-    parent_id: null,
-    content: '정말 아름다운 작품이네요. 유약 색감이 특히 인상적입니다.',
-    created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
-    updated_at: '',
-    profile: { id: 'user-2', username: 'potter_kim', bio: null, avatar_url: 'https://i.pravatar.cc/150?img=25', created_at: '', updated_at: '' },
-    replies: [
-      {
-        id: 'c1-r1',
-        post_id: '',
-        user_id: 'user-1',
-        parent_id: 'c1',
-        content: '감사합니다! 환원 소성 덕분에 이런 색감이 나왔어요.',
-        created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-        updated_at: '',
-        profile: { id: 'user-1', username: 'ceramic.studio', bio: null, avatar_url: 'https://i.pravatar.cc/150?img=12', created_at: '', updated_at: '' },
-      },
-    ],
-  },
-  {
-    id: 'c2',
-    post_id: '',
-    user_id: 'user-3',
-    parent_id: null,
-    content: '소성 온도가 어떻게 되나요? 저도 비슷한 작업을 하고 있어서요.',
-    created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-    updated_at: '',
-    profile: { id: 'user-3', username: 'clay_works', bio: null, avatar_url: 'https://i.pravatar.cc/150?img=48', created_at: '', updated_at: '' },
-    replies: [],
-  },
-  {
-    id: 'c3',
-    post_id: '',
-    user_id: 'user-4',
-    parent_id: null,
-    content: '질감이 살아있네요. 손으로 만지고 싶은 느낌이 들어요.',
-    created_at: new Date(Date.now() - 3600000).toISOString(),
-    updated_at: '',
-    profile: { id: 'user-4', username: 'art_lover_j', bio: null, avatar_url: 'https://i.pravatar.cc/150?img=36', created_at: '', updated_at: '' },
-    replies: [],
-  },
-]
+function extractStoragePath(url: string): string | null {
+  const match = url.match(/\/storage\/v1\/object\/public\/post-images\/(.+)$/)
+  return match ? match[1] : null
+}
 
-/*
- * Supabase 연결 후 교체:
- *
- * async function fetchPost(id: string) {
- *   const supabase = await createClient()
- *   const { data } = await supabase
- *     .from('posts')
- *     .select(`*, profile:profiles(*), images:post_images(*),
- *              comments(*, profile:profiles(*), replies:comments(*, profile:profiles(*)))`)
- *     .eq('id', id)
- *     .single()
- *   return data
- * }
- */
+async function fetchPost(id: string): Promise<Post | null> {
+  const supabase = await createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any)
+    .from('posts')
+    .select('*, profile:profiles!posts_user_id_fkey(*), images:post_images(*)')
+    .eq('id', id)
+    .single()
+  if (!data) return null
+  const post = data as Post
+  if (post.images) post.images.sort((a, b) => a.position - b.position)
+  return post
+}
+
+async function fetchComments(postId: string): Promise<Comment[]> {
+  const supabase = await createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any)
+    .from('comments')
+    .select('*, profile:profiles(*)')
+    .eq('post_id', postId)
+    .is('parent_id', null)
+    .order('created_at', { ascending: true })
+  return (data ?? []) as Comment[]
+}
 
 export default async function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  const found = MOCK_POSTS.find(p => p.id === id)
-  const post = found ?? MOCK_POSTS[0]
-  const comments = MOCK_COMMENTS.map(c => ({ ...c, post_id: post.id }))
+  const post = await fetchPost(id)
+  if (!post) notFound()
+
+  const comments = await fetchComments(id)
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const isOwn = !!user && user.id === post.user_id
+  const imagePaths = (post.images ?? [])
+    .map(img => extractStoragePath(img.url))
+    .filter((p): p is string => p !== null)
+  const redirectTo = post.profile?.username ? `/profile/${post.profile.username}` : '/'
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
@@ -134,6 +114,16 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
 
           {/* 좋아요 / 공유 */}
           <PostActions likeCount={post.like_count} />
+
+          {/* 본인 글 삭제 */}
+          {isOwn && (
+            <DeletePostButton
+              postId={post.id}
+              ownerId={post.user_id}
+              imagePaths={imagePaths}
+              redirectTo={redirectTo}
+            />
+          )}
 
           {/* 댓글 */}
           <CommentSection postId={post.id} initialComments={comments} />

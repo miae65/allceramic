@@ -24,6 +24,7 @@ async function fetchProfile(username: string): Promise<{ profile: Profile; posts
     .order('created_at', { ascending: false })
 
   const posts = (postsRaw ?? []) as Post[]
+  posts.forEach(p => p.images?.sort((a, b) => a.position - b.position))
   return { profile, posts }
 }
 

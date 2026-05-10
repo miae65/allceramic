@@ -1,30 +1,31 @@
 import { HeroSection } from '@/components/feed/HeroSection'
 import { HighlightPost } from '@/components/feed/HighlightPost'
 import { FeedGrid } from '@/components/feed/FeedGrid'
-import { MOCK_POSTS } from '@/lib/mock/posts'
+import { createClient } from '@/lib/supabase/server'
+import type { Post } from '@/types'
 
-/*
- * Supabase 연결 후 이 함수로 교체:
- *
- * async function fetchPosts() {
- *   const supabase = await createClient()
- *   const { data } = await supabase
- *     .from('posts')
- *     .select('*, profile:profiles(*), images:post_images(*)')
- *     .order('created_at', { ascending: false })
- *   return data ?? []
- * }
- */
+async function fetchPosts(): Promise<Post[]> {
+  const supabase = await createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any)
+    .from('posts')
+    .select('*, profile:profiles!posts_user_id_fkey(*), images:post_images(*)')
+    .order('created_at', { ascending: false })
+
+  const posts = (data ?? []) as Post[]
+  posts.forEach(p => p.images?.sort((a, b) => a.position - b.position))
+  return posts
+}
 
 export default async function HomePage() {
-  const posts = MOCK_POSTS
+  const posts = await fetchPosts()
   const highlight = [...posts].sort((a, b) => b.like_count - a.like_count)[0]
 
   return (
     <div>
       <HeroSection />
       {highlight && <HighlightPost post={highlight} />}
-      <FeedGrid posts={posts} columns={4} label="게시물" />
+      <FeedGrid posts={posts} columns={4} label="게시물" emptyMessage="아직 게시물이 없습니다" />
     </div>
   )
 }
