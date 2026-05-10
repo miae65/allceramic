@@ -92,13 +92,6 @@ function AuthButtons({
 
     return (
       <>
-        <button
-          onClick={onUploadClick}
-          aria-label="게시물 업로드"
-          className="text-stone-500 hover:text-stone-900 transition-colors"
-        >
-          <PlusIcon className="w-5 h-5" />
-        </button>
         <Link
           href={`/profile/${username}`}
           aria-label="마이페이지"
@@ -106,6 +99,13 @@ function AuthButtons({
         >
           <UserIcon className="w-5 h-5" />
         </Link>
+        <button
+          onClick={onUploadClick}
+          aria-label="게시물 업로드"
+          className="text-stone-500 hover:text-stone-900 transition-colors"
+        >
+          <PlusIcon className="w-5 h-5" />
+        </button>
         <button onClick={signOut} className="hover:text-stone-900 transition-colors">
           로그아웃
         </button>
@@ -116,18 +116,18 @@ function AuthButtons({
   return (
     <>
       <button
-        onClick={onUploadClick}
-        aria-label="게시물 업로드"
-        className="text-stone-500 hover:text-stone-900 transition-colors"
-      >
-        <PlusIcon className="w-5 h-5" />
-      </button>
-      <button
         onClick={onAuthRequired}
         aria-label="마이페이지"
         className="text-stone-500 hover:text-stone-900 transition-colors"
       >
         <UserIcon className="w-5 h-5" />
+      </button>
+      <button
+        onClick={onUploadClick}
+        aria-label="게시물 업로드"
+        className="text-stone-500 hover:text-stone-900 transition-colors"
+      >
+        <PlusIcon className="w-5 h-5" />
       </button>
       <button onClick={onAuthRequired} className="hover:text-stone-900 transition-colors">
         로그인
