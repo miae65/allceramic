@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { BookmarkIcon, UserIcon, PlusIcon } from '@/components/ui/icons'
 import { useAuth } from '@/components/auth/AuthProvider'
@@ -90,14 +91,22 @@ function AuthButtons({
       ?? user.user_metadata?.full_name?.replace(/\s+/g, '_').toLowerCase()
       ?? user.id.slice(0, 8)
 
+    const avatarUrl: string | undefined = user.user_metadata?.avatar_url ?? user.user_metadata?.picture
+
     return (
       <>
         <Link
           href={`/profile/${username}`}
           aria-label="마이페이지"
-          className="text-stone-500 hover:text-stone-900 transition-colors"
+          className="hover:opacity-80 transition-opacity"
         >
-          <UserIcon className="w-5 h-5" />
+          {avatarUrl ? (
+            <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-stone-200">
+              <Image src={avatarUrl} alt={username} width={28} height={28} className="object-cover w-full h-full" />
+            </div>
+          ) : (
+            <UserIcon className="w-5 h-5 text-stone-500" />
+          )}
         </Link>
         <button
           onClick={onUploadClick}
