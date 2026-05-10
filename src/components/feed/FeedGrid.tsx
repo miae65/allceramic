@@ -26,7 +26,7 @@ export function FeedGrid({ posts, label = 'All Works', emptyMessage, columns = 3
 
   return (
     <section className="max-w-5xl mx-auto px-6 py-16">
-      <p className="text-xs tracking-widest text-stone-400 uppercase mb-10">{label}</p>
+      <p className="text-sm tracking-widest text-stone-400 uppercase mb-10">{label}</p>
       <div className={`grid gap-2 ${colClass[columns]}`}>
         {posts.map(post => (
           <FeedCard key={post.id} post={post} />

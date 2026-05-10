@@ -1,11 +1,10 @@
 import Image from 'next/image'
 
-const HERO_IMAGE = 'https://i.pinimg.com/736x/38/bb/26/38bb26d55b0946fda1f58b6b4ce777cf.jpg'
+const HERO_IMAGE = '/hero.jpg'
 
 export function HeroSection() {
   return (
     <section className="relative h-[72vh] flex items-center justify-center overflow-hidden">
-      {/* 배경 이미지 — 이미지를 위로 올려 기물 노출 */}
       <Image
         src={HERO_IMAGE}
         alt=""
@@ -13,10 +12,10 @@ export function HeroSection() {
         priority
         sizes="100vw"
         className="object-cover"
-        style={{ objectPosition: 'center 70%' }}
+        style={{ objectPosition: 'center 50%' }}
       />
 
-      {/* 딤 (밝기 올림) */}
+      {/* 딤 */}
       <div className="absolute inset-0 bg-black/10" />
 
       {/* 하단 그라데이션 오버레이 */}

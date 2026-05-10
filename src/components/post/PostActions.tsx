@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { HeartIcon, ShareIcon } from '@/components/ui/icons'
 
 type Props = {
@@ -12,7 +12,9 @@ type Props = {
 export function PostActions({ likeCount, isLiked = false, postUrl }: Props) {
   const [liked, setLiked] = useState(isLiked)
   const [count, setCount] = useState(likeCount)
+  const [showShare, setShowShare] = useState(false)
   const [copied, setCopied] = useState(false)
+  const popupRef = useRef<HTMLDivElement>(null)
 
   const toggleLike = () => {
     setLiked(prev => {
@@ -22,16 +24,26 @@ export function PostActions({ likeCount, isLiked = false, postUrl }: Props) {
     // TODO: supabase.from('likes').insert / delete
   }
 
-  const share = async () => {
+  const copyLink = async () => {
     const url = postUrl ?? window.location.href
-    if (navigator.share) {
-      await navigator.share({ url })
-    } else {
-      await navigator.clipboard.writeText(url)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
+    await navigator.clipboard.writeText(url)
+    setCopied(true)
+    setTimeout(() => {
+      setCopied(false)
+      setShowShare(false)
+    }, 1500)
   }
+
+  useEffect(() => {
+    if (!showShare) return
+    const handleClick = (e: MouseEvent) => {
+      if (popupRef.current && !popupRef.current.contains(e.target as Node)) {
+        setShowShare(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showShare])
 
   return (
     <div className="flex items-center gap-5 py-5 border-t border-stone-100">
@@ -53,16 +65,36 @@ export function PostActions({ likeCount, isLiked = false, postUrl }: Props) {
       </button>
 
       {/* 공유 */}
-      <button
-        onClick={share}
-        aria-label="공유"
-        className="flex items-center gap-1.5 group"
-      >
-        <ShareIcon className="w-5 h-5 text-stone-400 group-hover:text-stone-700 transition-colors" />
-        {copied && (
-          <span className="text-xs text-stone-400">링크 복사됨</span>
+      <div className="relative" ref={popupRef}>
+        <button
+          onClick={() => setShowShare(prev => !prev)}
+          aria-label="공유"
+          className="flex items-center gap-1.5 group"
+        >
+          <ShareIcon className="w-5 h-5 text-stone-400 group-hover:text-stone-700 transition-colors" />
+        </button>
+
+        {showShare && (
+          <div className="absolute bottom-full left-0 mb-2 bg-white border border-stone-200 rounded-lg shadow-lg p-3 w-56 z-10">
+            <p className="text-xs text-stone-400 mb-2 tracking-wide">링크 공유</p>
+            <div className="flex items-center gap-2 bg-stone-50 rounded px-3 py-2 mb-2">
+              <span className="text-xs text-stone-400 truncate flex-1">
+                {typeof window !== 'undefined' ? (postUrl ?? window.location.href) : ''}
+              </span>
+            </div>
+            <button
+              onClick={copyLink}
+              className={`w-full text-xs py-2 rounded transition-colors ${
+                copied
+                  ? 'bg-stone-900 text-white'
+                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+              }`}
+            >
+              {copied ? '복사됨 ✓' : '링크 복사'}
+            </button>
+          </div>
         )}
-      </button>
+      </div>
     </div>
   )
 }

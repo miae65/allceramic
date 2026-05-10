@@ -7,11 +7,18 @@ import { BookmarkIcon, UserIcon, PlusIcon } from '@/components/ui/icons'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { createClient } from '@/lib/supabase/client'
 import { UploadModal } from '@/components/upload/UploadModal'
+import { AuthModal } from '@/components/auth/AuthModal'
 
 export function GNB() {
   const pathname = usePathname()
   const [uploadOpen, setUploadOpen] = useState(false)
+  const [authOpen, setAuthOpen] = useState(false)
   const { user } = useAuth()
+
+  const handleProtected = (action: () => void) => {
+    if (!user) { setAuthOpen(true); return }
+    action()
+  }
 
   return (
     <>
@@ -25,32 +32,50 @@ export function GNB() {
             >
               Allceramic
             </Link>
-            {user && (
-              <Link
-                href="/favorites"
-                aria-label="즐겨찾기"
-                className={`text-stone-500 hover:text-stone-900 transition-colors ${
-                  pathname === '/favorites' ? 'text-stone-900' : ''
-                }`}
-              >
-                <BookmarkIcon className="w-5 h-5" />
-              </Link>
-            )}
+            <Link
+              href="/favorites"
+              aria-label="즐겨찾기"
+              className={`text-stone-500 hover:text-stone-900 transition-colors ${
+                pathname === '/favorites' ? 'text-stone-900' : ''
+              }`}
+            >
+              <BookmarkIcon className="w-5 h-5" />
+            </Link>
+            <Link
+              href="/board"
+              className={`text-sm transition-colors ${
+                pathname.startsWith('/board')
+                  ? 'text-stone-900 font-medium'
+                  : 'text-stone-500 hover:text-stone-900'
+              }`}
+            >
+              자유게시판
+            </Link>
           </div>
 
           {/* 우측 */}
           <div className="flex items-center gap-5 text-sm text-stone-600">
-            <AuthButtons onUploadClick={() => setUploadOpen(true)} />
+            <AuthButtons
+              onUploadClick={() => handleProtected(() => setUploadOpen(true))}
+              onAuthRequired={() => setAuthOpen(true)}
+            />
           </div>
         </nav>
       </header>
 
       {uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} />}
+      {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
     </>
   )
 }
 
-function AuthButtons({ onUploadClick }: { onUploadClick: () => void }) {
+function AuthButtons({
+  onUploadClick,
+  onAuthRequired,
+}: {
+  onUploadClick: () => void
+  onAuthRequired: () => void
+}) {
   const { user, loading } = useAuth()
 
   if (loading) return <div className="w-16 h-4 bg-stone-100 rounded animate-pulse" />
@@ -89,8 +114,17 @@ function AuthButtons({ onUploadClick }: { onUploadClick: () => void }) {
   }
 
   return (
-    <Link href="/login" className="hover:text-stone-900 transition-colors">
-      로그인
-    </Link>
+    <>
+      <button
+        onClick={onAuthRequired}
+        aria-label="마이페이지"
+        className="text-stone-500 hover:text-stone-900 transition-colors"
+      >
+        <UserIcon className="w-5 h-5" />
+      </button>
+      <button onClick={onAuthRequired} className="hover:text-stone-900 transition-colors">
+        로그인
+      </button>
+    </>
   )
 }
