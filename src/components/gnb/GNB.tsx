@@ -154,7 +154,7 @@ function AuthButtons({
         >
           <PlusIcon className="w-5 h-5" />
         </button>
-        <Link href={`/profile/${username}`} className="hover:text-stone-900 transition-colors">
+        <Link href="/profile/me" className="hover:text-stone-900 transition-colors">
           마이페이지
         </Link>
       </>
