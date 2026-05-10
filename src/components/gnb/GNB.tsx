@@ -138,7 +138,8 @@ function AuthButtons({
     }
 
     const username = user.user_metadata?.preferred_username
-      ?? user.user_metadata?.full_name?.replace(/\s+/g, '_').toLowerCase()
+      ?? user.user_metadata?.user_name
+      ?? user.email?.split('@')[0]
       ?? user.id.slice(0, 8)
 
     const avatarUrl: string | undefined = user.user_metadata?.avatar_url ?? user.user_metadata?.picture
