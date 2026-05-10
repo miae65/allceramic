@@ -116,6 +116,13 @@ function AuthButtons({
   return (
     <>
       <button
+        onClick={onUploadClick}
+        aria-label="게시물 업로드"
+        className="text-stone-500 hover:text-stone-900 transition-colors"
+      >
+        <PlusIcon className="w-5 h-5" />
+      </button>
+      <button
         onClick={onAuthRequired}
         aria-label="마이페이지"
         className="text-stone-500 hover:text-stone-900 transition-colors"
