@@ -83,7 +83,12 @@ export function CommentItem({ comment, onReply, isReply = false }: Props) {
                 type="text"
                 value={replyText}
                 onChange={e => setReplyText(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && submitReply()}
+                onKeyDown={e => {
+                  if (e.key !== 'Enter') return
+                  if (e.nativeEvent.isComposing) return
+                  e.preventDefault()
+                  submitReply()
+                }}
                 placeholder="답글을 입력하세요..."
                 className="flex-1 text-sm bg-stone-100 rounded-full px-4 py-2 outline-none focus:ring-1 focus:ring-stone-300 placeholder:text-stone-400"
                 autoFocus

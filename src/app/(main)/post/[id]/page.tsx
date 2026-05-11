@@ -33,11 +33,19 @@ async function fetchComments(postId: string): Promise<Comment[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data } = await (supabase as any)
     .from('comments')
-    .select('*, profile:profiles(*)')
+    .select('*, profile:profiles!comments_user_id_fkey(*)')
     .eq('post_id', postId)
-    .is('parent_id', null)
     .order('created_at', { ascending: true })
-  return (data ?? []) as Comment[]
+
+  const all = (data ?? []) as Comment[]
+  const topLevel = all.filter(c => !c.parent_id).map(c => ({ ...c, replies: [] as Comment[] }))
+  const byParent = new Map(topLevel.map(c => [c.id, c]))
+  for (const c of all) {
+    if (c.parent_id && byParent.has(c.parent_id)) {
+      byParent.get(c.parent_id)!.replies!.push(c)
+    }
+  }
+  return topLevel
 }
 
 export default async function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
