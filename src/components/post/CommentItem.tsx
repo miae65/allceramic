@@ -7,11 +7,13 @@ import type { Comment } from '@/types'
 
 type Props = {
   comment: Comment
+  currentUserId?: string | null
   onReply?: (parentId: string, content: string) => void
+  onDelete?: (commentId: string, parentId: string | null) => void
   isReply?: boolean
 }
 
-export function CommentItem({ comment, onReply, isReply = false }: Props) {
+export function CommentItem({ comment, currentUserId, onReply, onDelete, isReply = false }: Props) {
   const [replyOpen, setReplyOpen] = useState(false)
   const [replyText, setReplyText] = useState('')
 
@@ -22,6 +24,8 @@ export function CommentItem({ comment, onReply, isReply = false }: Props) {
     setReplyText('')
     setReplyOpen(false)
   }
+
+  const isOwn = !!currentUserId && currentUserId === comment.user_id
 
   const timeAgo = (iso: string) => {
     const diff = Date.now() - new Date(iso).getTime()
@@ -66,15 +70,25 @@ export function CommentItem({ comment, onReply, isReply = false }: Props) {
           {/* 내용 */}
           <p className="text-sm text-stone-700 leading-relaxed">{comment.content}</p>
 
-          {/* 답글 달기 버튼 (최상위 댓글에만) */}
-          {!isReply && (
-            <button
-              onClick={() => setReplyOpen(v => !v)}
-              className="mt-1.5 text-xs text-stone-400 hover:text-stone-700 transition-colors"
-            >
-              {replyOpen ? '취소' : '답글 달기'}
-            </button>
-          )}
+          {/* 액션 버튼 */}
+          <div className="mt-1.5 flex items-center gap-3">
+            {!isReply && (
+              <button
+                onClick={() => setReplyOpen(v => !v)}
+                className="text-xs text-stone-400 hover:text-stone-700 transition-colors"
+              >
+                {replyOpen ? '취소' : '답글 달기'}
+              </button>
+            )}
+            {isOwn && onDelete && (
+              <button
+                onClick={() => onDelete(comment.id, comment.parent_id)}
+                className="text-xs text-stone-400 hover:text-rose-500 transition-colors"
+              >
+                삭제
+              </button>
+            )}
+          </div>
 
           {/* 인라인 답글 입력 */}
           {replyOpen && (
@@ -109,7 +123,13 @@ export function CommentItem({ comment, onReply, isReply = false }: Props) {
       {comment.replies && comment.replies.length > 0 && (
         <div className="mt-4 space-y-4">
           {comment.replies.map(reply => (
-            <CommentItem key={reply.id} comment={reply} isReply />
+            <CommentItem
+              key={reply.id}
+              comment={reply}
+              currentUserId={currentUserId}
+              onDelete={onDelete}
+              isReply
+            />
           ))}
         </div>
       )}

@@ -82,6 +82,38 @@ export function CommentSection({ postId, initialComments }: Props) {
     }
   }
 
+  const handleDelete = async (commentId: string, parentId: string | null) => {
+    if (!user) { setError('로그인이 필요합니다'); return }
+    if (!confirm('댓글을 삭제하시겠어요?')) return
+    try {
+      const supabase = createClient()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = supabase as any
+      const { error: deleteError } = await db
+        .from('comments')
+        .delete()
+        .eq('id', commentId)
+      if (deleteError) {
+        console.error('[comment delete error]', deleteError)
+        throw new Error(deleteError.message ?? '댓글 삭제 실패')
+      }
+
+      setComments(prev => {
+        if (parentId === null) {
+          return prev.filter(c => c.id !== commentId)
+        }
+        return prev.map(c =>
+          c.id === parentId
+            ? { ...c, replies: (c.replies ?? []).filter(r => r.id !== commentId) }
+            : c
+        )
+      })
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '댓글 삭제 중 오류가 발생했습니다')
+    }
+  }
+
   const meProfile: Profile | null = user
     ? {
         id: user.id,
@@ -140,7 +172,13 @@ export function CommentSection({ postId, initialComments }: Props) {
       ) : (
         <div className="space-y-6">
           {comments.map(comment => (
-            <CommentItem key={comment.id} comment={comment} onReply={handleReply} />
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              currentUserId={user?.id ?? null}
+              onReply={handleReply}
+              onDelete={handleDelete}
+            />
           ))}
         </div>
       )}
