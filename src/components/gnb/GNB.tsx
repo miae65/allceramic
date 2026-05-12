@@ -9,11 +9,14 @@ import { useAuth } from '@/components/auth/AuthProvider'
 import { createClient } from '@/lib/supabase/client'
 import { UploadModal } from '@/components/upload/UploadModal'
 import { AuthModal } from '@/components/auth/AuthModal'
+import { InquiryModal } from '@/components/inquiry/InquiryModal'
+import { isAdmin } from '@/lib/admin'
 
 export function GNB() {
   const pathname = usePathname()
   const [uploadOpen, setUploadOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
+  const [inquiryOpen, setInquiryOpen] = useState(false)
   const { user } = useAuth()
 
   const handleProtected = (action: () => void) => {
@@ -59,6 +62,7 @@ export function GNB() {
             <AuthButtons
               onUploadClick={() => handleProtected(() => setUploadOpen(true))}
               onAuthRequired={() => setAuthOpen(true)}
+              onInquiryClick={() => handleProtected(() => setInquiryOpen(true))}
             />
           </div>
         </nav>
@@ -66,6 +70,7 @@ export function GNB() {
 
       {uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} />}
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
+      {inquiryOpen && <InquiryModal onClose={() => setInquiryOpen(false)} />}
     </>
   )
 }
@@ -73,11 +78,15 @@ export function GNB() {
 function ProfileDropdown({
   username,
   avatarUrl,
+  isAdminUser,
   onSignOut,
+  onInquiryClick,
 }: {
   username: string
   avatarUrl?: string
+  isAdminUser: boolean
   onSignOut: () => void
+  onInquiryClick: () => void
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -107,10 +116,25 @@ function ProfileDropdown({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-10 w-36 bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden z-50">
+        <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden z-50">
+          <button
+            onClick={() => { setOpen(false); onInquiryClick() }}
+            className="w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
+          >
+            문의하기
+          </button>
+          {isAdminUser && (
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="block w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
+            >
+              관리자
+            </Link>
+          )}
           <button
             onClick={() => { setOpen(false); onSignOut() }}
-            className="w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
+            className="w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors border-t border-stone-100"
           >
             로그아웃
           </button>
@@ -123,9 +147,11 @@ function ProfileDropdown({
 function AuthButtons({
   onUploadClick,
   onAuthRequired,
+  onInquiryClick,
 }: {
   onUploadClick: () => void
   onAuthRequired: () => void
+  onInquiryClick: () => void
 }) {
   const { user, loading } = useAuth()
 
@@ -146,7 +172,13 @@ function AuthButtons({
 
     return (
       <>
-        <ProfileDropdown username={username} avatarUrl={avatarUrl} onSignOut={signOut} />
+        <ProfileDropdown
+          username={username}
+          avatarUrl={avatarUrl}
+          isAdminUser={isAdmin(user)}
+          onSignOut={signOut}
+          onInquiryClick={onInquiryClick}
+        />
         <button
           onClick={onUploadClick}
           aria-label="게시물 업로드"

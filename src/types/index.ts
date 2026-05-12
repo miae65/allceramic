@@ -41,3 +41,38 @@ export type Comment = {
   profile?: Profile
   replies?: Comment[]
 }
+
+export type InquiryStatus = 'pending' | 'in_progress' | 'resolved'
+
+export type Inquiry = {
+  id: string
+  user_id: string
+  subject: string
+  content: string
+  status: InquiryStatus
+  admin_reply: string | null
+  created_at: string
+  updated_at: string
+  // joined
+  profile?: Profile
+}
+
+export type Notice = {
+  id: string
+  author_id: string
+  title: string
+  content: string
+  is_published: boolean
+  created_at: string
+  updated_at: string
+  // joined
+  author?: Profile
+}
+
+export type SiteSettings = {
+  id: number
+  site_name: string
+  contact_email: string | null
+  sns_links: Record<string, string>
+  updated_at: string
+}
