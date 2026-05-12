@@ -74,5 +74,8 @@ export type SiteSettings = {
   site_name: string
   contact_email: string | null
   sns_links: Record<string, string>
+  hero_image_url: string | null
+  hero_title: string
+  hero_subtitle: string
   updated_at: string
 }
