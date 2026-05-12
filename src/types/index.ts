@@ -3,6 +3,7 @@ export type Profile = {
   username: string
   bio: string | null
   avatar_url: string | null
+  upload_blocked?: boolean
   created_at: string
   updated_at: string
 }

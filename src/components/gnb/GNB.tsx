@@ -8,6 +8,7 @@ import { BookmarkIcon, UserIcon, PlusIcon } from '@/components/ui/icons'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { createClient } from '@/lib/supabase/client'
 import { UploadModal } from '@/components/upload/UploadModal'
+import { UploadBlockedAlert } from '@/components/upload/UploadBlockedAlert'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { InquiryModal } from '@/components/inquiry/InquiryModal'
 import { isAdmin } from '@/lib/admin'
@@ -17,11 +18,32 @@ export function GNB() {
   const [uploadOpen, setUploadOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
   const [inquiryOpen, setInquiryOpen] = useState(false)
+  const [blockedAlertOpen, setBlockedAlertOpen] = useState(false)
   const { user } = useAuth()
 
   const handleProtected = (action: () => void) => {
     if (!user) { setAuthOpen(true); return }
     action()
+  }
+
+  const tryOpenUpload = async () => {
+    if (!user) { setAuthOpen(true); return }
+    try {
+      const supabase = createClient()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase as any)
+        .from('profiles')
+        .select('upload_blocked')
+        .eq('id', user.id)
+        .single()
+      if (data?.upload_blocked) {
+        setBlockedAlertOpen(true)
+        return
+      }
+    } catch (err) {
+      console.error('[upload block check]', err)
+    }
+    setUploadOpen(true)
   }
 
   return (
@@ -60,7 +82,7 @@ export function GNB() {
           {/* 우측 */}
           <div className="flex items-center gap-5 text-sm text-stone-600">
             <AuthButtons
-              onUploadClick={() => handleProtected(() => setUploadOpen(true))}
+              onUploadClick={tryOpenUpload}
               onAuthRequired={() => setAuthOpen(true)}
               onInquiryClick={() => handleProtected(() => setInquiryOpen(true))}
             />
@@ -71,6 +93,7 @@ export function GNB() {
       {uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} />}
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
       {inquiryOpen && <InquiryModal onClose={() => setInquiryOpen(false)} />}
+      {blockedAlertOpen && <UploadBlockedAlert onClose={() => setBlockedAlertOpen(false)} />}
     </>
   )
 }

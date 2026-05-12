@@ -2,13 +2,14 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { ADMIN_EMAILS } from '@/lib/admin'
+import { AdminUploadBlockToggle } from '@/components/admin/AdminUploadBlockToggle'
 
 async function fetchUsers() {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profiles } = await (supabase as any)
     .from('profiles')
-    .select('id, username, avatar_url, bio, created_at')
+    .select('id, username, avatar_url, bio, upload_blocked, created_at')
     .order('created_at', { ascending: false })
 
   return (profiles ?? []) as Array<{
@@ -16,6 +17,7 @@ async function fetchUsers() {
     username: string
     avatar_url: string | null
     bio: string | null
+    upload_blocked: boolean
     created_at: string
   }>
 }
@@ -54,12 +56,13 @@ export default async function AdminUsersPage() {
               <th className="text-left px-6 py-3 font-normal">소개</th>
               <th className="text-left px-6 py-3 font-normal">게시물</th>
               <th className="text-left px-6 py-3 font-normal">권한</th>
+              <th className="text-left px-6 py-3 font-normal">업로드</th>
               <th className="text-left px-6 py-3 font-normal">가입일</th>
             </tr>
           </thead>
           <tbody>
             {users.length === 0 ? (
-              <tr><td colSpan={5} className="px-6 py-16 text-center text-stone-400">회원이 없습니다</td></tr>
+              <tr><td colSpan={6} className="px-6 py-16 text-center text-stone-400">회원이 없습니다</td></tr>
             ) : users.map(u => {
               const adminTag = (ADMIN_EMAILS as readonly string[]).some(e => u.username === e.split('@')[0])
               return (
@@ -81,6 +84,13 @@ export default async function AdminUsersPage() {
                       <span className="text-xs px-2 py-0.5 rounded-full bg-stone-900 text-white">관리자</span>
                     ) : (
                       <span className="text-xs text-stone-400">일반</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-3">
+                    {adminTag ? (
+                      <span className="text-xs text-stone-300">-</span>
+                    ) : (
+                      <AdminUploadBlockToggle userId={u.id} username={u.username} blocked={u.upload_blocked} />
                     )}
                   </td>
                   <td className="px-6 py-3 text-stone-400 tabular-nums text-xs">{new Date(u.created_at).toLocaleDateString('ko-KR')}</td>
