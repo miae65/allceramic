@@ -4,17 +4,20 @@ import { AdminPostRow } from '@/components/admin/AdminPostRow'
 async function fetchAllPosts() {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (supabase as any)
+  const sb = supabase as any
+  const { data } = await sb
     .from('posts')
-    .select('id, caption, created_at, like_count, profile:profiles!posts_user_id_fkey(id, username, avatar_url), images:post_images(url, position)')
+    .select('id, caption, created_at, like_count, share_count, profile:profiles!posts_user_id_fkey(id, username, avatar_url), images:post_images(url, position), comments(count)')
     .order('created_at', { ascending: false })
   const posts = (data ?? []) as Array<{
     id: string
     caption: string | null
     created_at: string
     like_count: number
+    share_count: number
     profile: { id: string; username: string; avatar_url: string | null } | null
     images: { url: string; position: number }[]
+    comments: { count: number }[]
   }>
   posts.forEach(p => p.images?.sort((a, b) => a.position - b.position))
   return posts
@@ -40,13 +43,15 @@ export default async function AdminPostsPage() {
               <th className="text-left px-6 py-3 font-normal">작성자</th>
               <th className="text-left px-6 py-3 font-normal">캡션</th>
               <th className="text-left px-6 py-3 font-normal">좋아요</th>
+              <th className="text-left px-6 py-3 font-normal">댓글</th>
+              <th className="text-left px-6 py-3 font-normal">공유</th>
               <th className="text-left px-6 py-3 font-normal">작성일</th>
               <th className="text-right px-6 py-3 font-normal">관리</th>
             </tr>
           </thead>
           <tbody>
             {posts.length === 0 ? (
-              <tr><td colSpan={6} className="px-6 py-16 text-center text-stone-400">게시물이 없습니다</td></tr>
+              <tr><td colSpan={8} className="px-6 py-16 text-center text-stone-400">게시물이 없습니다</td></tr>
             ) : posts.map(p => (
               <AdminPostRow
                 key={p.id}
@@ -54,6 +59,8 @@ export default async function AdminPostsPage() {
                 caption={p.caption}
                 createdAt={p.created_at}
                 likeCount={p.like_count}
+                commentCount={p.comments?.[0]?.count ?? 0}
+                shareCount={p.share_count}
                 authorUsername={p.profile?.username ?? '-'}
                 thumbnailUrl={p.images[0]?.url ?? null}
                 imagePaths={p.images.map(img => {

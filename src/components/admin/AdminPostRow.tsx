@@ -11,12 +11,14 @@ type Props = {
   caption: string | null
   createdAt: string
   likeCount: number
+  commentCount: number
+  shareCount: number
   authorUsername: string
   thumbnailUrl: string | null
   imagePaths: string[]
 }
 
-export function AdminPostRow({ id, caption, createdAt, likeCount, authorUsername, thumbnailUrl, imagePaths }: Props) {
+export function AdminPostRow({ id, caption, createdAt, likeCount, commentCount, shareCount, authorUsername, thumbnailUrl, imagePaths }: Props) {
   const router = useRouter()
   const [deleting, setDeleting] = useState(false)
 
@@ -52,6 +54,8 @@ export function AdminPostRow({ id, caption, createdAt, likeCount, authorUsername
       </td>
       <td className="px-6 py-3 text-stone-600 max-w-md truncate">{caption || '-'}</td>
       <td className="px-6 py-3 text-stone-500 tabular-nums">{likeCount}</td>
+      <td className="px-6 py-3 text-stone-500 tabular-nums">{commentCount}</td>
+      <td className="px-6 py-3 text-stone-500 tabular-nums">{shareCount}</td>
       <td className="px-6 py-3 text-stone-400 tabular-nums text-xs">{new Date(createdAt).toLocaleDateString('ko-KR')}</td>
       <td className="px-6 py-3 text-right">
         <button

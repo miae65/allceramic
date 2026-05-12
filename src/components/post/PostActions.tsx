@@ -2,14 +2,16 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { HeartIcon, ShareIcon } from '@/components/ui/icons'
+import { createClient } from '@/lib/supabase/client'
 
 type Props = {
   likeCount: number
   isLiked?: boolean
   postUrl?: string
+  postId?: string
 }
 
-export function PostActions({ likeCount, isLiked = false, postUrl }: Props) {
+export function PostActions({ likeCount, isLiked = false, postUrl, postId }: Props) {
   const [liked, setLiked] = useState(isLiked)
   const [count, setCount] = useState(likeCount)
   const [showShare, setShowShare] = useState(false)
@@ -28,6 +30,13 @@ export function PostActions({ likeCount, isLiked = false, postUrl }: Props) {
     const url = postUrl ?? window.location.href
     await navigator.clipboard.writeText(url)
     setCopied(true)
+    if (postId) {
+      const supabase = createClient()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(supabase as any).rpc('increment_share_count', { post: postId }).then(({ error }: { error: unknown }) => {
+        if (error) console.error('[share count]', error)
+      })
+    }
     setTimeout(() => {
       setCopied(false)
       setShowShare(false)

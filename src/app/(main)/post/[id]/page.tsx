@@ -121,7 +121,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
           </p>
 
           {/* 좋아요 / 공유 */}
-          <PostActions likeCount={post.like_count} />
+          <PostActions likeCount={post.like_count} postId={post.id} />
 
           {/* 본인 글 삭제 */}
           {isOwn && (
