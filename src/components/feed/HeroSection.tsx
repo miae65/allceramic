@@ -11,35 +11,64 @@ async function fetchHero() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data } = await (supabase as any)
     .from('site_settings')
-    .select('hero_image_url, hero_title, hero_subtitle, hero_object_position, hero_scale')
+    .select('hero_image_url, hero_title, hero_subtitle, hero_object_position, hero_scale, hero_mobile_image_url, hero_mobile_object_position, hero_mobile_scale')
     .eq('id', 1)
     .single()
+
+  const desktopImage = (data?.hero_image_url as string | null) || DEFAULT_IMAGE
+  const mobileImage = (data?.hero_mobile_image_url as string | null) || desktopImage
+
   return {
-    image: (data?.hero_image_url as string | null) || DEFAULT_IMAGE,
     title: (data?.hero_title as string | null) || DEFAULT_TITLE,
     subtitle: (data?.hero_subtitle as string | null) || DEFAULT_SUBTITLE,
-    position: (data?.hero_object_position as string | null) || DEFAULT_POSITION,
-    scale: Number(data?.hero_scale ?? 1) || 1,
+    desktop: {
+      image: desktopImage,
+      position: (data?.hero_object_position as string | null) || DEFAULT_POSITION,
+      scale: Number(data?.hero_scale ?? 1) || 1,
+    },
+    mobile: {
+      image: mobileImage,
+      position: (data?.hero_mobile_object_position as string | null) || DEFAULT_POSITION,
+      scale: Number(data?.hero_mobile_scale ?? 1) || 1,
+    },
   }
 }
 
 export async function HeroSection() {
-  const { image, title, subtitle, position, scale } = await fetchHero()
+  const { title, subtitle, desktop, mobile } = await fetchHero()
 
   return (
     <section className="relative h-[72vh] flex items-center justify-center overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden">
+      {/* 데스크탑 이미지 (md 이상) */}
+      <div className="hidden md:block absolute inset-0 overflow-hidden">
         <Image
-          src={image}
+          src={desktop.image}
           alt=""
           fill
           priority
           sizes="100vw"
           className="object-cover"
           style={{
-            objectPosition: position,
-            transform: `scale(${scale})`,
-            transformOrigin: position,
+            objectPosition: desktop.position,
+            transform: `scale(${desktop.scale})`,
+            transformOrigin: desktop.position,
+          }}
+        />
+      </div>
+
+      {/* 모바일 이미지 (md 미만) */}
+      <div className="md:hidden absolute inset-0 overflow-hidden">
+        <Image
+          src={mobile.image}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+          style={{
+            objectPosition: mobile.position,
+            transform: `scale(${mobile.scale})`,
+            transformOrigin: mobile.position,
           }}
         />
       </div>

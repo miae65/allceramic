@@ -80,5 +80,8 @@ export type SiteSettings = {
   hero_subtitle: string
   hero_object_position: string
   hero_scale: number
+  hero_mobile_image_url: string | null
+  hero_mobile_object_position: string
+  hero_mobile_scale: number
   updated_at: string
 }

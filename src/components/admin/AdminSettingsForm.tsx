@@ -16,6 +16,8 @@ const SNS_LABEL: Record<SnsKey, string> = {
 
 const DEFAULT_IMAGE = '/hero.jpg'
 
+type Variant = 'desktop' | 'mobile'
+
 function parsePosition(s: string): { x: number; y: number } {
   const m = s.match(/(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%/)
   if (m) return { x: parseFloat(m[1]), y: parseFloat(m[2]) }
@@ -27,16 +29,28 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<{ startX: number; startY: number; posX: number; posY: number } | null>(null)
+
   const [siteName, setSiteName] = useState(initial.site_name)
   const [contactEmail, setContactEmail] = useState(initial.contact_email ?? '')
   const [snsLinks, setSnsLinks] = useState<Record<string, string>>(initial.sns_links ?? {})
-  const [heroImageUrl, setHeroImageUrl] = useState<string | null>(initial.hero_image_url ?? null)
   const [heroTitle, setHeroTitle] = useState(initial.hero_title)
   const [heroSubtitle, setHeroSubtitle] = useState(initial.hero_subtitle)
-  const initialPos = parsePosition(initial.hero_object_position)
-  const [posX, setPosX] = useState(initialPos.x)
-  const [posY, setPosY] = useState(initialPos.y)
-  const [scale, setScale] = useState(Number(initial.hero_scale) || 1)
+
+  // 데스크탑 배너
+  const dPos = parsePosition(initial.hero_object_position)
+  const [dImageUrl, setDImageUrl] = useState<string | null>(initial.hero_image_url ?? null)
+  const [dPosX, setDPosX] = useState(dPos.x)
+  const [dPosY, setDPosY] = useState(dPos.y)
+  const [dScale, setDScale] = useState(Number(initial.hero_scale) || 1)
+
+  // 모바일 배너
+  const mPos = parsePosition(initial.hero_mobile_object_position)
+  const [mImageUrl, setMImageUrl] = useState<string | null>(initial.hero_mobile_image_url ?? null)
+  const [mPosX, setMPosX] = useState(mPos.x)
+  const [mPosY, setMPosY] = useState(mPos.y)
+  const [mScale, setMScale] = useState(Number(initial.hero_mobile_scale) || 1)
+
+  const [activeTab, setActiveTab] = useState<Variant>('desktop')
   const [imgNatural, setImgNatural] = useState<{ w: number; h: number } | null>(null)
   const [dragging, setDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -44,7 +58,18 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
-  const previewImage = heroImageUrl || DEFAULT_IMAGE
+  // 현재 활성 변형의 값/세터 (자동으로 desktop/mobile 변수에 매핑)
+  const isDesktop = activeTab === 'desktop'
+  const imageUrl = isDesktop ? dImageUrl : mImageUrl
+  const setImageUrl = isDesktop ? setDImageUrl : setMImageUrl
+  const posX = isDesktop ? dPosX : mPosX
+  const setPosX = isDesktop ? setDPosX : setMPosX
+  const posY = isDesktop ? dPosY : mPosY
+  const setPosY = isDesktop ? setDPosY : setMPosY
+  const scale = isDesktop ? dScale : mScale
+  const setScale = isDesktop ? setDScale : setMScale
+
+  const previewImage = imageUrl || (isDesktop ? DEFAULT_IMAGE : (dImageUrl || DEFAULT_IMAGE))
   const positionStr = `${posX}% ${posY}%`
 
   const resetTransform = () => {
@@ -52,6 +77,11 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
     setPosY(50)
     setScale(1)
   }
+
+  // 이미지 또는 탭이 바뀌면 natural 측정 리셋
+  useEffect(() => {
+    setImgNatural(null)
+  }, [previewImage, activeTab])
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget
@@ -73,7 +103,6 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
       const rect = container.getBoundingClientRect()
       const cw = rect.width
       const ch = rect.height
-      // object-cover의 기본 scale factor + 사용자 추가 확대
       const fitScale = Math.max(cw / imgNatural.w, ch / imgNatural.h)
       const coveredW = imgNatural.w * fitScale * scale
       const coveredH = imgNatural.h * fitScale * scale
@@ -105,7 +134,7 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
       window.removeEventListener('touchmove', onTouchMove)
       window.removeEventListener('touchend', onEnd)
     }
-  }, [dragging, scale, imgNatural])
+  }, [dragging, scale, imgNatural, setPosX, setPosY])
 
   const onUploadImage = async (file: File) => {
     if (!file.type.startsWith('image/')) { setError('이미지 파일만 업로드할 수 있어요'); return }
@@ -114,13 +143,13 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
     try {
       const supabase = createClient()
       const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
-      const path = `hero/${Date.now()}.${ext}`
+      const path = `hero/${activeTab}/${Date.now()}.${ext}`
       const { error: upErr } = await supabase.storage
         .from('site-assets')
         .upload(path, file, { contentType: file.type, upsert: false })
       if (upErr) throw new Error(upErr.message)
       const { data: { publicUrl } } = supabase.storage.from('site-assets').getPublicUrl(path)
-      setHeroImageUrl(publicUrl)
+      setImageUrl(publicUrl)
       resetTransform()
       setSaved(false)
     } catch (err) {
@@ -147,11 +176,14 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
           site_name: siteName.trim() || 'Allceramic',
           contact_email: contactEmail.trim() || null,
           sns_links: sns,
-          hero_image_url: heroImageUrl,
+          hero_image_url: dImageUrl,
+          hero_object_position: `${dPosX}% ${dPosY}%`,
+          hero_scale: dScale,
+          hero_mobile_image_url: mImageUrl,
+          hero_mobile_object_position: `${mPosX}% ${mPosY}%`,
+          hero_mobile_scale: mScale,
           hero_title: heroTitle.trim() || 'Allceramic',
           hero_subtitle: heroSubtitle.trim() || 'A curated space for ceramic arts',
-          hero_object_position: positionStr,
-          hero_scale: scale,
           updated_at: new Date().toISOString(),
         })
         .eq('id', 1)
@@ -165,25 +197,48 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
     }
   }
 
+  // 활성 탭의 미리보기 비율
+  const aspectClass = isDesktop ? 'aspect-[21/9]' : 'aspect-[9/16]'
+  const previewWidthClass = isDesktop ? 'w-full' : 'w-48 mx-auto'
+
   return (
     <>
       <section className="bg-white rounded-2xl border border-stone-100 p-6 space-y-5">
         <div className="flex items-end justify-between">
           <p className="text-xs text-stone-400 tracking-wider uppercase">메인 배너</p>
-          <p className="text-xs text-stone-300">실제 노출 영역과 동일한 비율로 미리보기</p>
+          <p className="text-xs text-stone-300">이미지를 드래그해 위치 조정 · 데스크탑/모바일 따로 설정</p>
         </div>
 
-        {/* 데스크탑 미리보기 — 이미지를 드래그해서 위치 조정 */}
+        {/* 탭 */}
+        <div className="flex gap-1 bg-stone-100 rounded-full p-1 w-fit">
+          {(['desktop', 'mobile'] as Variant[]).map(v => (
+            <button
+              key={v}
+              onClick={() => setActiveTab(v)}
+              className={`text-xs tracking-wider px-4 py-1.5 rounded-full transition-colors ${
+                activeTab === v ? 'bg-stone-900 text-white' : 'text-stone-500 hover:text-stone-900'
+              }`}
+            >
+              {v === 'desktop' ? '데스크탑' : '모바일'}
+            </button>
+          ))}
+        </div>
+
+        {/* 활성 변형 미리보기 (드래그 가능) */}
         <div>
           <div className="flex items-baseline justify-between mb-2">
-            <p className="text-xs text-stone-400">데스크탑 (가로 화면)</p>
-            <p className="text-[11px] text-stone-400">이미지를 드래그해서 위치 조정 · X {posX.toFixed(0)}% · Y {posY.toFixed(0)}%</p>
+            <p className="text-xs text-stone-400">
+              {isDesktop ? '데스크탑 (가로 화면)' : '모바일 (세로 화면)'}
+            </p>
+            <p className="text-[11px] text-stone-400">
+              X {posX.toFixed(0)}% · Y {posY.toFixed(0)}% · {scale.toFixed(2)}×
+            </p>
           </div>
           <div
             ref={previewRef}
             onMouseDown={e => { e.preventDefault(); startDrag(e.clientX, e.clientY) }}
             onTouchStart={e => { const t = e.touches[0]; if (t) startDrag(t.clientX, t.clientY) }}
-            className={`relative w-full aspect-[21/9] rounded-xl overflow-hidden bg-stone-900 border border-stone-200 select-none touch-none ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            className={`relative ${previewWidthClass} ${aspectClass} rounded-xl overflow-hidden bg-stone-900 border border-stone-200 select-none touch-none ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -200,46 +255,18 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
             />
             <div className="absolute inset-0 bg-black/10 pointer-events-none" />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25 pointer-events-none" />
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-4 pointer-events-none">
               <p
                 className="font-serif text-white tracking-[0.18em] leading-none"
                 style={{
-                  fontSize: 'clamp(1.5rem, 5vw, 3rem)',
+                  fontSize: isDesktop ? 'clamp(1.5rem, 5vw, 3rem)' : '1.25rem',
                   textShadow: '0 0 24px rgba(255,253,230,0.5), 0 0 60px rgba(255,253,230,0.3)',
                 }}
               >
                 {heroTitle || 'Allceramic'}
               </p>
-              <p className="mt-3 text-white/70 tracking-[0.25em] text-[10px] uppercase">
+              <p className={`mt-2 text-white/70 tracking-[0.25em] uppercase ${isDesktop ? 'text-[10px]' : 'text-[8px]'}`}>
                 {heroSubtitle || 'A curated space for ceramic arts'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* 모바일 미리보기 */}
-        <div>
-          <p className="text-xs text-stone-400 mb-2">모바일 (세로 화면)</p>
-          <div className="relative w-40 aspect-[9/16] rounded-xl overflow-hidden bg-stone-900 border border-stone-200">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={previewImage}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover transition-transform"
-              style={{
-                objectPosition: positionStr,
-                transform: `scale(${scale})`,
-                transformOrigin: positionStr,
-              }}
-            />
-            <div className="absolute inset-0 bg-black/10" />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25" />
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-2 pointer-events-none">
-              <p className="font-serif text-white tracking-[0.18em] text-sm leading-none" style={{ textShadow: '0 0 12px rgba(255,253,230,0.5)' }}>
-                {heroTitle || 'Allceramic'}
-              </p>
-              <p className="mt-2 text-white/70 tracking-[0.2em] text-[7px] uppercase">
-                {heroSubtitle || ''}
               </p>
             </div>
           </div>
@@ -249,7 +276,7 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
         <div className="space-y-4 pt-2 border-t border-stone-100">
           <div>
             <div className="flex items-baseline justify-between mb-1">
-              <label className="text-xs text-stone-500">확대</label>
+              <label className="text-xs text-stone-500">확대 ({isDesktop ? '데스크탑' : '모바일'})</label>
               <span className="text-xs text-stone-400 tabular-nums">{scale.toFixed(2)}×</span>
             </div>
             <input
@@ -263,17 +290,21 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
               className="text-xs tracking-wider text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-full px-4 py-1.5 transition-colors disabled:opacity-50"
             >
-              {uploading ? '업로드중' : heroImageUrl ? '이미지 변경' : '이미지 업로드'}
+              {uploading
+                ? '업로드중'
+                : imageUrl
+                  ? `${isDesktop ? '데스크탑' : '모바일'} 이미지 변경`
+                  : `${isDesktop ? '데스크탑' : '모바일'} 이미지 업로드`}
             </button>
-            {heroImageUrl && (
+            {imageUrl && (
               <button
-                onClick={() => { setHeroImageUrl(null); resetTransform() }}
+                onClick={() => { setImageUrl(null); resetTransform() }}
                 disabled={uploading}
                 className="text-xs tracking-wider text-stone-500 hover:text-rose-500 rounded-full px-4 py-1.5 transition-colors disabled:opacity-50"
               >
@@ -286,6 +317,9 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
             >
               위치·확대 초기화
             </button>
+            {!isDesktop && !mImageUrl && (
+              <span className="text-[11px] text-stone-400">데스크탑 이미지를 fallback으로 사용 중</span>
+            )}
             <input
               ref={fileInputRef}
               type="file"
@@ -297,7 +331,7 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
         </div>
 
         <div>
-          <label className="text-xs text-stone-400">제목</label>
+          <label className="text-xs text-stone-400">제목 (공통)</label>
           <input
             type="text"
             value={heroTitle}
@@ -309,7 +343,7 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
         </div>
 
         <div>
-          <label className="text-xs text-stone-400">서브타이틀</label>
+          <label className="text-xs text-stone-400">서브타이틀 (공통)</label>
           <input
             type="text"
             value={heroSubtitle}
