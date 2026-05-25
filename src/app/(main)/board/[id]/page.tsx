@@ -65,23 +65,24 @@ export default async function BoardPostDetailPage({ params }: { params: Promise<
 
       <article>
         <h1 className="text-xl font-medium text-stone-900 mb-3">{post.title}</h1>
-        <div className="flex items-center gap-3 text-xs text-stone-400 pb-5 border-b border-stone-100">
-          <Link href={`/profile/${post.profile?.username}`} className="hover:text-stone-700 transition-colors">
-            {post.profile?.username ?? '-'}
-          </Link>
-          <span>·</span>
-          <span className="tabular-nums">{new Date(post.created_at).toLocaleString('ko-KR')}</span>
-          <span>·</span>
-          <span className="tabular-nums">조회 {post.view_count + 1}</span>
+        <div className="flex items-center justify-between gap-3 pb-5 border-b border-stone-100">
+          <div className="flex items-center gap-3 text-xs text-stone-400 min-w-0">
+            <Link href={`/profile/${post.profile?.username}`} className="hover:text-stone-700 transition-colors truncate">
+              {post.profile?.username ?? '-'}
+            </Link>
+            <span>·</span>
+            <span className="tabular-nums">{new Date(post.created_at).toLocaleString('ko-KR')}</span>
+            <span>·</span>
+            <span className="tabular-nums">조회 {post.view_count + 1}</span>
+          </div>
+          {(canEdit || canDelete) && (
+            <BoardPostActions postId={post.id} canEdit={canEdit} canDelete={canDelete} />
+          )}
         </div>
 
         <div className="py-6 text-sm text-stone-700 whitespace-pre-wrap leading-relaxed min-h-[120px]">
           {post.content}
         </div>
-
-        {(canEdit || canDelete) && (
-          <BoardPostActions postId={post.id} canEdit={canEdit} canDelete={canDelete} />
-        )}
       </article>
 
       <div className="mt-10">

@@ -32,11 +32,11 @@ export function BoardPostActions({ postId, canEdit, canDelete }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-3 pt-2 border-t border-stone-100">
+    <div className="flex items-center gap-3">
       {canEdit && (
         <Link
           href={`/board/${postId}/edit`}
-          className="text-xs text-stone-500 hover:text-stone-900 transition-colors py-3"
+          className="text-xs text-stone-500 hover:text-stone-900 transition-colors"
         >
           수정
         </Link>
@@ -45,7 +45,7 @@ export function BoardPostActions({ postId, canEdit, canDelete }: Props) {
         <button
           onClick={onDelete}
           disabled={deleting}
-          className="text-xs text-stone-400 hover:text-rose-500 transition-colors py-3 disabled:opacity-50"
+          className="text-xs text-stone-400 hover:text-rose-500 transition-colors disabled:opacity-50"
         >
           {deleting ? '삭제중' : '삭제'}
         </button>

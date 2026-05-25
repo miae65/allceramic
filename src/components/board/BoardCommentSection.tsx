@@ -102,7 +102,7 @@ export function BoardCommentSection({ postId, initialComments, currentUserId, is
         <button
           onClick={submit}
           disabled={!newComment.trim() || !user || submitting}
-          className="text-xs text-stone-700 font-medium hover:text-stone-900 disabled:text-stone-300 transition-colors"
+          className="text-xs text-stone-500 hover:text-stone-900 disabled:text-stone-300 transition-colors"
         >
           {submitting ? '등록중' : '게시'}
         </button>
