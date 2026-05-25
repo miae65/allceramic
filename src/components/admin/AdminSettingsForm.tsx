@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { SiteSettings } from '@/types'
@@ -25,6 +25,8 @@ function parsePosition(s: string): { x: number; y: number } {
 export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const previewRef = useRef<HTMLDivElement>(null)
+  const dragRef = useRef<{ startX: number; startY: number; posX: number; posY: number } | null>(null)
   const [siteName, setSiteName] = useState(initial.site_name)
   const [contactEmail, setContactEmail] = useState(initial.contact_email ?? '')
   const [snsLinks, setSnsLinks] = useState<Record<string, string>>(initial.sns_links ?? {})
@@ -35,6 +37,8 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
   const [posX, setPosX] = useState(initialPos.x)
   const [posY, setPosY] = useState(initialPos.y)
   const [scale, setScale] = useState(Number(initial.hero_scale) || 1)
+  const [imgNatural, setImgNatural] = useState<{ w: number; h: number } | null>(null)
+  const [dragging, setDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -48,6 +52,60 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
     setPosY(50)
     setScale(1)
   }
+
+  const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget
+    setImgNatural({ w: img.naturalWidth, h: img.naturalHeight })
+  }
+
+  const startDrag = (clientX: number, clientY: number) => {
+    dragRef.current = { startX: clientX, startY: clientY, posX, posY }
+    setDragging(true)
+  }
+
+  useEffect(() => {
+    if (!dragging) return
+
+    const updateFromDelta = (clientX: number, clientY: number) => {
+      const ref = dragRef.current
+      const container = previewRef.current
+      if (!ref || !container || !imgNatural) return
+      const rect = container.getBoundingClientRect()
+      const cw = rect.width
+      const ch = rect.height
+      // object-cover의 기본 scale factor + 사용자 추가 확대
+      const fitScale = Math.max(cw / imgNatural.w, ch / imgNatural.h)
+      const coveredW = imgNatural.w * fitScale * scale
+      const coveredH = imgNatural.h * fitScale * scale
+      const overflowX = Math.max(0, coveredW - cw)
+      const overflowY = Math.max(0, coveredH - ch)
+      const dx = clientX - ref.startX
+      const dy = clientY - ref.startY
+      let nextX = ref.posX
+      let nextY = ref.posY
+      if (overflowX > 0) nextX = Math.min(100, Math.max(0, ref.posX - (dx / overflowX) * 100))
+      if (overflowY > 0) nextY = Math.min(100, Math.max(0, ref.posY - (dy / overflowY) * 100))
+      setPosX(nextX)
+      setPosY(nextY)
+    }
+
+    const onMouseMove = (e: MouseEvent) => updateFromDelta(e.clientX, e.clientY)
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches[0]) updateFromDelta(e.touches[0].clientX, e.touches[0].clientY)
+    }
+    const onEnd = () => { dragRef.current = null; setDragging(false) }
+
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onEnd)
+    window.addEventListener('touchmove', onTouchMove, { passive: true })
+    window.addEventListener('touchend', onEnd)
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onEnd)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend', onEnd)
+    }
+  }, [dragging, scale, imgNatural])
 
   const onUploadImage = async (file: File) => {
     if (!file.type.startsWith('image/')) { setError('이미지 파일만 업로드할 수 있어요'); return }
@@ -115,78 +173,46 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
           <p className="text-xs text-stone-300">실제 노출 영역과 동일한 비율로 미리보기</p>
         </div>
 
-        {/* 데스크탑 미리보기 — 좌측 세로 위치 + 하단 가로 위치 슬라이더 */}
+        {/* 데스크탑 미리보기 — 이미지를 드래그해서 위치 조정 */}
         <div>
-          <p className="text-xs text-stone-400 mb-2">데스크탑 (가로 화면)</p>
-          <div className="grid grid-cols-[40px_1fr] gap-2">
-            {/* 좌측 세로 슬라이더 */}
-            <div className="flex flex-col items-center justify-between py-1">
-              <span className="text-[10px] text-stone-400 tabular-nums">{posY.toFixed(0)}%</span>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                step={1}
-                value={posY}
-                onChange={e => setPosY(Number(e.target.value))}
-                aria-label="세로 위치"
-                aria-orientation="vertical"
-                className="accent-stone-900 flex-1 my-1"
+          <div className="flex items-baseline justify-between mb-2">
+            <p className="text-xs text-stone-400">데스크탑 (가로 화면)</p>
+            <p className="text-[11px] text-stone-400">이미지를 드래그해서 위치 조정 · X {posX.toFixed(0)}% · Y {posY.toFixed(0)}%</p>
+          </div>
+          <div
+            ref={previewRef}
+            onMouseDown={e => { e.preventDefault(); startDrag(e.clientX, e.clientY) }}
+            onTouchStart={e => { const t = e.touches[0]; if (t) startDrag(t.clientX, t.clientY) }}
+            className={`relative w-full aspect-[21/9] rounded-xl overflow-hidden bg-stone-900 border border-stone-200 select-none touch-none ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewImage}
+              alt=""
+              draggable={false}
+              onLoad={onImageLoad}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{
+                objectPosition: positionStr,
+                transform: `scale(${scale})`,
+                transformOrigin: positionStr,
+              }}
+            />
+            <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25 pointer-events-none" />
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
+              <p
+                className="font-serif text-white tracking-[0.18em] leading-none"
                 style={{
-                  writingMode: 'vertical-lr',
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  WebkitAppearance: 'slider-vertical' as any,
-                  width: 24,
-                } as React.CSSProperties}
-              />
-              <span className="text-[10px] text-stone-500">세로</span>
-            </div>
-            {/* 우측: 이미지 + 하단 가로 슬라이더 */}
-            <div className="space-y-2">
-              <div className="relative w-full aspect-[21/9] rounded-xl overflow-hidden bg-stone-900 border border-stone-200">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={previewImage}
-                  alt=""
-                  className="absolute inset-0 w-full h-full object-cover transition-transform"
-                  style={{
-                    objectPosition: positionStr,
-                    transform: `scale(${scale})`,
-                    transformOrigin: positionStr,
-                  }}
-                />
-                <div className="absolute inset-0 bg-black/10" />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25" />
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
-                  <p
-                    className="font-serif text-white tracking-[0.18em] leading-none"
-                    style={{
-                      fontSize: 'clamp(1.5rem, 5vw, 3rem)',
-                      textShadow: '0 0 24px rgba(255,253,230,0.5), 0 0 60px rgba(255,253,230,0.3)',
-                    }}
-                  >
-                    {heroTitle || 'Allceramic'}
-                  </p>
-                  <p className="mt-3 text-white/70 tracking-[0.25em] text-[10px] uppercase">
-                    {heroSubtitle || 'A curated space for ceramic arts'}
-                  </p>
-                </div>
-              </div>
-              {/* 하단 가로 슬라이더 */}
-              <div className="flex items-center gap-2 px-1">
-                <span className="text-[10px] text-stone-500 w-8">가로</span>
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={posX}
-                  onChange={e => setPosX(Number(e.target.value))}
-                  aria-label="가로 위치"
-                  className="flex-1 accent-stone-900"
-                />
-                <span className="text-[10px] text-stone-400 tabular-nums w-10 text-right">{posX.toFixed(0)}%</span>
-              </div>
+                  fontSize: 'clamp(1.5rem, 5vw, 3rem)',
+                  textShadow: '0 0 24px rgba(255,253,230,0.5), 0 0 60px rgba(255,253,230,0.3)',
+                }}
+              >
+                {heroTitle || 'Allceramic'}
+              </p>
+              <p className="mt-3 text-white/70 tracking-[0.25em] text-[10px] uppercase">
+                {heroSubtitle || 'A curated space for ceramic arts'}
+              </p>
             </div>
           </div>
         </div>
