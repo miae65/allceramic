@@ -28,6 +28,9 @@ export default function BoardPage() {
 
       {/* 헤더와 목록 사이 간격 100px */}
       <div className="mt-[100px]">
+        {MOCK_BOARD_POSTS.length === 0 && (
+          <p className="text-sm text-stone-400 text-center py-20">아직 게시글이 없습니다.</p>
+        )}
         <div className="divide-y divide-stone-100">
           {MOCK_BOARD_POSTS.map((post, i) => (
             <Link
