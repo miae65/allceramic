@@ -102,12 +102,14 @@ function ProfileDropdown({
   username,
   avatarUrl,
   isAdminUser,
+  unreadCount,
   onSignOut,
   onInquiryClick,
 }: {
   username: string
   avatarUrl?: string
   isAdminUser: boolean
+  unreadCount: number
   onSignOut: () => void
   onInquiryClick: () => void
 }) {
@@ -127,7 +129,7 @@ function ProfileDropdown({
       <button
         onClick={() => setOpen(o => !o)}
         aria-label="프로필 메뉴"
-        className="hover:opacity-80 transition-opacity"
+        className="relative hover:opacity-80 transition-opacity"
       >
         {avatarUrl ? (
           <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-stone-200">
@@ -136,16 +138,36 @@ function ProfileDropdown({
         ) : (
           <UserIcon className="w-5 h-5 text-stone-500" />
         )}
+        {unreadCount > 0 && (
+          <span
+            aria-label={`알림 ${unreadCount}건`}
+            className="absolute -bottom-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-medium leading-none flex items-center justify-center tabular-nums ring-2 ring-white"
+          >
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden z-50">
+        <div className="absolute right-0 top-10 w-44 bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden z-50">
           <Link
             href="/profile/me"
             onClick={() => setOpen(false)}
             className="block w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
           >
             마이페이지
+          </Link>
+          <Link
+            href="/inquiries/me"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-between w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
+          >
+            <span>내 문의</span>
+            {unreadCount > 0 && (
+              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-medium flex items-center justify-center tabular-nums">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
           </Link>
           <button
             onClick={() => { setOpen(false); onInquiryClick() }}
@@ -184,6 +206,21 @@ function AuthButtons({
   onInquiryClick: () => void
 }) {
   const { user, loading } = useAuth()
+  const pathname = usePathname()
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    if (!user) { setUnreadCount(0); return }
+    let cancelled = false
+    const supabase = createClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(supabase as any).rpc('count_my_unread_replies').then(({ data, error }: { data: number | null; error: unknown }) => {
+      if (cancelled) return
+      if (error) { console.error('[unread count]', error); return }
+      setUnreadCount(typeof data === 'number' ? data : 0)
+    })
+    return () => { cancelled = true }
+  }, [user, pathname])
 
   if (loading) return <div className="w-16 h-4 bg-stone-100 rounded animate-pulse" />
 
@@ -206,6 +243,7 @@ function AuthButtons({
           username={username}
           avatarUrl={avatarUrl}
           isAdminUser={isAdmin(user)}
+          unreadCount={unreadCount}
           onSignOut={signOut}
           onInquiryClick={onInquiryClick}
         />

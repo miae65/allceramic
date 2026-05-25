@@ -52,6 +52,8 @@ export type Inquiry = {
   content: string
   status: InquiryStatus
   admin_reply: string | null
+  replied_at: string | null
+  reply_seen_at: string | null
   created_at: string
   updated_at: string
   // joined
