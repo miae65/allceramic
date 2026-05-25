@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Inquiry, InquiryStatus } from '@/types'
@@ -13,10 +13,25 @@ const STATUS_MAP: Record<InquiryStatus, { label: string; cls: string }> = {
 
 export function AdminInquiryRow({ inquiry }: { inquiry: Inquiry }) {
   const router = useRouter()
+  const liRef = useRef<HTMLLIElement>(null)
   const [expanded, setExpanded] = useState(false)
   const [reply, setReply] = useState(inquiry.admin_reply ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // URL 해시가 이 문의 id면 자동 펼치고 스크롤
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const matchHash = () => {
+      if (window.location.hash === `#${inquiry.id}`) {
+        setExpanded(true)
+        liRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }
+    matchHash()
+    window.addEventListener('hashchange', matchHash)
+    return () => window.removeEventListener('hashchange', matchHash)
+  }, [inquiry.id])
 
   const updateStatus = async (next: InquiryStatus) => {
     setSaving(true)
@@ -63,7 +78,7 @@ export function AdminInquiryRow({ inquiry }: { inquiry: Inquiry }) {
   const status = STATUS_MAP[inquiry.status]
 
   return (
-    <li className="p-5">
+    <li ref={liRef} id={inquiry.id} className="p-5 scroll-mt-20">
       <button
         onClick={() => setExpanded(v => !v)}
         className="w-full flex items-center justify-between gap-4 text-left"

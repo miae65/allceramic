@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 
 async function fetchStats() {
@@ -94,18 +95,26 @@ export default async function AdminHomePage() {
         </section>
 
         <section className="bg-white rounded-2xl border border-stone-100 p-6">
-          <p className="text-xs text-stone-400 tracking-wider uppercase mb-4">최근 문의</p>
+          <div className="flex items-baseline justify-between mb-4">
+            <p className="text-xs text-stone-400 tracking-wider uppercase">최근 문의</p>
+            <Link href="/admin/inquiries" className="text-xs text-stone-400 hover:text-stone-700 transition-colors">전체 보기</Link>
+          </div>
           {recent.recentInquiries.length === 0 ? (
             <p className="text-sm text-stone-400 py-8 text-center">문의 없음</p>
           ) : (
             <ul className="space-y-3">
               {recent.recentInquiries.map((q: { id: string; subject: string; status: string; created_at: string; profile: { username: string } | null }) => (
-                <li key={q.id} className="flex items-center justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-stone-700 truncate">{q.subject}</p>
-                    <p className="text-xs text-stone-400 mt-0.5">{q.profile?.username ?? '-'}</p>
-                  </div>
-                  <StatusBadge status={q.status} />
+                <li key={q.id}>
+                  <Link
+                    href={`/admin/inquiries#${q.id}`}
+                    className="flex items-center justify-between gap-3 -mx-2 px-2 py-1.5 rounded-lg hover:bg-stone-50 transition-colors"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-stone-700 truncate">{q.subject}</p>
+                      <p className="text-xs text-stone-400 mt-0.5">{q.profile?.username ?? '-'}</p>
+                    </div>
+                    <StatusBadge status={q.status} />
+                  </Link>
                 </li>
               ))}
             </ul>
