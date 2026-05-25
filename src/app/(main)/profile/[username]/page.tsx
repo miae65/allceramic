@@ -47,14 +47,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
     posts = data.posts
     isOwn = user?.id === profile.id
 
-    // 로그인 유저의 Google 아바타가 있으면 프로필에 반영
-    if (isOwn && user) {
+    // 본인 프로필에 아바타가 없고 Google 아바타가 있으면 최초 1회 동기화
+    if (isOwn && user && !profile.avatar_url) {
       const googleAvatar: string | undefined = user.user_metadata?.avatar_url ?? user.user_metadata?.picture
       if (googleAvatar) {
-        if (!profile.avatar_url) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await (supabase.from('profiles') as any).update({ avatar_url: googleAvatar }).eq('id', user.id)
-        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from('profiles') as any).update({ avatar_url: googleAvatar }).eq('id', user.id)
         profile = { ...profile, avatar_url: googleAvatar }
       }
     }

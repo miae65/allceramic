@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { BookmarkIcon } from '@/components/ui/icons'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { AuthModal } from '@/components/auth/AuthModal'
+import { ProfileSettingsModal } from '@/components/profile/ProfileSettingsModal'
 import type { Profile } from '@/types'
 
 type Props = {
@@ -18,6 +19,7 @@ export function ProfileHeader({ profile, postCount, isOwn = false, isFavorited =
   const { user } = useAuth()
   const [favorited, setFavorited] = useState(isFavorited)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
 
   const handleSave = () => {
     if (!user) {
@@ -63,8 +65,15 @@ export function ProfileHeader({ profile, postCount, isOwn = false, isFavorited =
           {postCount} {postCount === 1 ? 'post' : 'posts'}
         </p>
 
-        {/* 액션 버튼 — 본인 프로필은 없음 */}
-        {!isOwn && (
+        {/* 액션 버튼 */}
+        {isOwn ? (
+          <button
+            onClick={() => setShowSettings(true)}
+            className="text-xs tracking-[0.18em] uppercase text-stone-700 border border-stone-300 rounded-full px-5 py-2 hover:border-stone-700 transition-colors"
+          >
+            설정
+          </button>
+        ) : (
           <button
             onClick={handleSave}
             className={`inline-flex items-center gap-2 text-xs tracking-[0.18em] uppercase rounded-full px-5 py-2 border transition-colors ${
@@ -80,6 +89,14 @@ export function ProfileHeader({ profile, postCount, isOwn = false, isFavorited =
       </section>
 
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+      {showSettings && (
+        <ProfileSettingsModal
+          userId={profile.id}
+          currentUsername={profile.username}
+          currentAvatarUrl={profile.avatar_url}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </>
   )
 }
