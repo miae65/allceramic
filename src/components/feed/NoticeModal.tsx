@@ -63,8 +63,7 @@ export function NoticeModal({ notice }: Props) {
         </div>
 
         <div className="px-6 py-6 max-h-[60vh] overflow-y-auto">
-          <h2 className="font-serif text-lg text-stone-900 mb-3">{notice.title}</h2>
-          <p className="text-sm text-stone-600 whitespace-pre-wrap leading-relaxed">{notice.content}</p>
+          <p className="text-sm text-stone-700 whitespace-pre-wrap leading-relaxed">{notice.content}</p>
           <p className="text-[11px] text-stone-300 mt-4 tabular-nums">
             {new Date(notice.created_at).toLocaleDateString('ko-KR')}
           </p>
