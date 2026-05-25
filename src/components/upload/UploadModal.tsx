@@ -137,7 +137,7 @@ export function UploadModal({ onClose }: Props) {
       <div className={`relative bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden ${modalHeight}`}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100 flex-shrink-0">
           <p className="font-serif text-base tracking-widest text-stone-900">
-            {step === 'select' && 'New Post'}
+            {step === 'select' && '업로드'}
             {step === 'crop' && 'Crop Image'}
             {step === 'caption' && 'Add Caption'}
             {step === 'submitting' && 'Posting...'}
