@@ -1,7 +1,10 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { HeartIcon, ShareIcon } from '@/components/ui/icons'
+import { useAuth } from '@/components/auth/AuthProvider'
+import { AuthModal } from '@/components/auth/AuthModal'
 import { createClient } from '@/lib/supabase/client'
 
 type Props = {
@@ -12,18 +15,53 @@ type Props = {
 }
 
 export function PostActions({ likeCount, isLiked = false, postUrl, postId }: Props) {
+  const router = useRouter()
+  const { user } = useAuth()
   const [liked, setLiked] = useState(isLiked)
   const [count, setCount] = useState(likeCount)
+  const [authOpen, setAuthOpen] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [copied, setCopied] = useState(false)
   const popupRef = useRef<HTMLDivElement>(null)
+  const pendingRef = useRef(false)
 
-  const toggleLike = () => {
-    setLiked(prev => {
-      setCount(c => prev ? c - 1 : c + 1)
-      return !prev
-    })
-    // TODO: supabase.from('likes').insert / delete
+  const toggleLike = async () => {
+    if (!user) { setAuthOpen(true); return }
+    if (!postId) return
+    if (pendingRef.current) return
+    pendingRef.current = true
+
+    const wasLiked = liked
+    // Optimistic
+    setLiked(!wasLiked)
+    setCount(c => wasLiked ? c - 1 : c + 1)
+
+    try {
+      const supabase = createClient()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = supabase as any
+      if (wasLiked) {
+        const { error } = await db
+          .from('likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id)
+        if (error) throw new Error(error.message)
+      } else {
+        const { error } = await db
+          .from('likes')
+          .insert({ post_id: postId, user_id: user.id })
+        if (error) throw new Error(error.message)
+      }
+      router.refresh()
+    } catch (err) {
+      console.error('[toggle like]', err)
+      // 롤백
+      setLiked(wasLiked)
+      setCount(c => wasLiked ? c + 1 : c - 1)
+    } finally {
+      pendingRef.current = false
+    }
   }
 
   const copyLink = async () => {
@@ -104,6 +142,8 @@ export function PostActions({ likeCount, isLiked = false, postUrl, postId }: Pro
           </div>
         )}
       </div>
+
+      {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
     </div>
   )
 }

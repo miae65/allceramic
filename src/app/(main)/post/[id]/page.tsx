@@ -59,6 +59,19 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const isOwn = !!user && user.id === post.user_id
+
+  let isLiked = false
+  if (user) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: likeRow } = await (supabase as any)
+      .from('likes')
+      .select('post_id')
+      .eq('post_id', id)
+      .eq('user_id', user.id)
+      .maybeSingle()
+    isLiked = !!likeRow
+  }
+
   const imagePaths = (post.images ?? [])
     .map(img => extractStoragePath(img.url))
     .filter((p): p is string => p !== null)
@@ -121,7 +134,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
           </p>
 
           {/* 좋아요 / 공유 */}
-          <PostActions likeCount={post.like_count} postId={post.id} />
+          <PostActions likeCount={post.like_count} postId={post.id} isLiked={isLiked} />
 
           {/* 본인 글 삭제 */}
           {isOwn && (
