@@ -110,7 +110,7 @@ export function CommentItem({ comment, currentUserId, onReply, onDelete, isReply
               <button
                 onClick={submitReply}
                 disabled={!replyText.trim()}
-                className="text-xs text-stone-700 font-medium hover:text-stone-900 disabled:text-stone-300 transition-colors"
+                className="text-xs text-stone-500 hover:text-stone-900 disabled:text-stone-300 transition-colors"
               >
                 게시
               </button>
