@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { AdminInquiryRow } from '@/components/admin/AdminInquiryRow'
+import type { Inquiry } from '@/types'
 
 async function fetchStats() {
   const supabase = await createClient()
@@ -35,13 +37,13 @@ async function fetchRecent() {
       .order('created_at', { ascending: false })
       .limit(5),
     sb.from('inquiries')
-      .select('id, subject, status, created_at, profile:profiles!inquiries_user_id_fkey(username)')
+      .select('*, profile:profiles!inquiries_user_id_fkey(id, username, avatar_url)')
       .order('created_at', { ascending: false })
       .limit(5),
   ])
   return {
     recentPosts: recentPosts.data ?? [],
-    recentInquiries: recentInquiries.data ?? [],
+    recentInquiries: (recentInquiries.data ?? []) as Inquiry[],
   }
 }
 
@@ -95,27 +97,16 @@ export default async function AdminHomePage() {
         </section>
 
         <section className="bg-white rounded-2xl border border-stone-100 p-6">
-          <div className="flex items-baseline justify-between mb-4">
+          <div className="flex items-baseline justify-between mb-2">
             <p className="text-xs text-stone-400 tracking-wider uppercase">최근 문의</p>
             <Link href="/admin/inquiries" className="text-xs text-stone-400 hover:text-stone-700 transition-colors">전체 보기</Link>
           </div>
           {recent.recentInquiries.length === 0 ? (
             <p className="text-sm text-stone-400 py-8 text-center">문의 없음</p>
           ) : (
-            <ul className="space-y-3">
-              {recent.recentInquiries.map((q: { id: string; subject: string; status: string; created_at: string; profile: { username: string } | null }) => (
-                <li key={q.id}>
-                  <Link
-                    href={`/admin/inquiries#${q.id}`}
-                    className="flex items-center justify-between gap-3 -mx-2 px-2 py-1.5 rounded-lg hover:bg-stone-50 transition-colors"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm text-stone-700 truncate">{q.subject}</p>
-                      <p className="text-xs text-stone-400 mt-0.5">{q.profile?.username ?? '-'}</p>
-                    </div>
-                    <StatusBadge status={q.status} />
-                  </Link>
-                </li>
+            <ul className="-mx-6 divide-y divide-stone-100 border-t border-stone-100">
+              {recent.recentInquiries.map(q => (
+                <AdminInquiryRow key={q.id} inquiry={q} />
               ))}
             </ul>
           )}
@@ -125,12 +116,3 @@ export default async function AdminHomePage() {
   )
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; cls: string }> = {
-    pending: { label: '대기', cls: 'bg-amber-100 text-amber-700' },
-    in_progress: { label: '처리중', cls: 'bg-blue-100 text-blue-700' },
-    resolved: { label: '완료', cls: 'bg-emerald-100 text-emerald-700' },
-  }
-  const m = map[status] ?? { label: status, cls: 'bg-stone-100 text-stone-700' }
-  return <span className={`text-xs px-2 py-0.5 rounded-full ${m.cls}`}>{m.label}</span>
-}
