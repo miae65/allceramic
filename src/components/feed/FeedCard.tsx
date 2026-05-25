@@ -13,6 +13,7 @@ export function FeedCard({ post }: { post: Post }) {
   const images = post.images ?? []
   const hasMultiple = images.length > 1
   const current = images[imageIndex]
+  const isVideo = !!post.video_url
 
   const prev = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -31,8 +32,21 @@ export function FeedCard({ post }: { post: Post }) {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        {/* 이미지 */}
-        {current ? (
+        {/* 미디어 */}
+        {isVideo ? (
+          <>
+            <video
+              src={post.video_url ?? undefined}
+              muted
+              playsInline
+              preload="metadata"
+              className={`absolute inset-0 w-full h-full object-cover transition-transform duration-500 ${hovered ? 'scale-[1.03]' : 'scale-100'}`}
+            />
+            <div className="absolute top-2 right-2 z-10 bg-black/50 text-white text-[10px] tracking-wider uppercase px-2 py-0.5 rounded">
+              VIDEO
+            </div>
+          </>
+        ) : current ? (
           <Image
             src={current.url}
             alt={post.caption ?? ''}

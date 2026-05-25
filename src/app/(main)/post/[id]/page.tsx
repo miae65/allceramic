@@ -91,7 +91,17 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
       <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-10 lg:gap-14 items-start">
         {/* 이미지 뷰어 (데스크탑에서 sticky) */}
         <div className="lg:sticky lg:top-24">
-          <PostViewer images={post.images ?? []} />
+          {post.video_url ? (
+            <video
+              src={post.video_url}
+              controls
+              playsInline
+              className="w-full rounded-lg bg-stone-900 aspect-[3/4] object-cover"
+              preload="metadata"
+            />
+          ) : (
+            <PostViewer images={post.images ?? []} />
+          )}
         </div>
 
         {/* 우측 패널 */}

@@ -21,6 +21,7 @@ export type Post = {
   user_id: string
   caption: string | null
   like_count: number
+  video_url?: string | null
   created_at: string
   updated_at: string
   // joined
