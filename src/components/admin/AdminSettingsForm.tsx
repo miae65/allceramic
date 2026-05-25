@@ -1,7 +1,6 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { SiteSettings } from '@/types'
@@ -15,6 +14,14 @@ const SNS_LABEL: Record<SnsKey, string> = {
   website: 'Website',
 }
 
+const DEFAULT_IMAGE = '/hero.jpg'
+
+function parsePosition(s: string): { x: number; y: number } {
+  const m = s.match(/(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%/)
+  if (m) return { x: parseFloat(m[1]), y: parseFloat(m[2]) }
+  return { x: 50, y: 50 }
+}
+
 export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -24,10 +31,23 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
   const [heroImageUrl, setHeroImageUrl] = useState<string | null>(initial.hero_image_url ?? null)
   const [heroTitle, setHeroTitle] = useState(initial.hero_title)
   const [heroSubtitle, setHeroSubtitle] = useState(initial.hero_subtitle)
+  const initialPos = parsePosition(initial.hero_object_position)
+  const [posX, setPosX] = useState(initialPos.x)
+  const [posY, setPosY] = useState(initialPos.y)
+  const [scale, setScale] = useState(Number(initial.hero_scale) || 1)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+
+  const previewImage = heroImageUrl || DEFAULT_IMAGE
+  const positionStr = `${posX}% ${posY}%`
+
+  const resetTransform = () => {
+    setPosX(50)
+    setPosY(50)
+    setScale(1)
+  }
 
   const onUploadImage = async (file: File) => {
     if (!file.type.startsWith('image/')) { setError('이미지 파일만 업로드할 수 있어요'); return }
@@ -43,6 +63,7 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
       if (upErr) throw new Error(upErr.message)
       const { data: { publicUrl } } = supabase.storage.from('site-assets').getPublicUrl(path)
       setHeroImageUrl(publicUrl)
+      resetTransform()
       setSaved(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : '이미지 업로드 실패')
@@ -71,6 +92,8 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
           hero_image_url: heroImageUrl,
           hero_title: heroTitle.trim() || 'Allceramic',
           hero_subtitle: heroSubtitle.trim() || 'A curated space for ceramic arts',
+          hero_object_position: positionStr,
+          hero_scale: scale,
           updated_at: new Date().toISOString(),
         })
         .eq('id', 1)
@@ -87,20 +110,124 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
   return (
     <>
       <section className="bg-white rounded-2xl border border-stone-100 p-6 space-y-5">
-        <p className="text-xs text-stone-400 tracking-wider uppercase">메인 배너</p>
+        <div className="flex items-end justify-between">
+          <p className="text-xs text-stone-400 tracking-wider uppercase">메인 배너</p>
+          <p className="text-xs text-stone-300">실제 노출 영역과 동일한 비율로 미리보기</p>
+        </div>
 
+        {/* 데스크탑 미리보기 (실제 hero는 100vw × 72vh, 노트북 기준 약 21:9) */}
         <div>
-          <label className="text-xs text-stone-400">배경 이미지</label>
-          <div className="mt-2 relative w-full aspect-[16/7] rounded-xl overflow-hidden bg-stone-100 border border-stone-200">
-            {heroImageUrl ? (
-              <Image src={heroImageUrl} alt="" fill sizes="(max-width: 768px) 100vw, 800px" className="object-cover" />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-xs text-stone-400 tracking-widest uppercase">
-                기본 이미지 사용중 (/hero.jpg)
-              </div>
-            )}
+          <p className="text-xs text-stone-400 mb-2">데스크탑 (가로 화면)</p>
+          <div className="relative w-full aspect-[21/9] rounded-xl overflow-hidden bg-stone-900 border border-stone-200">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewImage}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover transition-transform"
+              style={{
+                objectPosition: positionStr,
+                transform: `scale(${scale})`,
+                transformOrigin: positionStr,
+              }}
+            />
+            <div className="absolute inset-0 bg-black/10" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25" />
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
+              <p
+                className="font-serif text-white tracking-[0.18em] leading-none"
+                style={{
+                  fontSize: 'clamp(1.5rem, 5vw, 3rem)',
+                  textShadow: '0 0 24px rgba(255,253,230,0.5), 0 0 60px rgba(255,253,230,0.3)',
+                }}
+              >
+                {heroTitle || 'Allceramic'}
+              </p>
+              <p className="mt-3 text-white/70 tracking-[0.25em] text-[10px] uppercase">
+                {heroSubtitle || 'A curated space for ceramic arts'}
+              </p>
+            </div>
           </div>
-          <div className="mt-3 flex items-center gap-2">
+        </div>
+
+        {/* 모바일 미리보기 */}
+        <div>
+          <p className="text-xs text-stone-400 mb-2">모바일 (세로 화면)</p>
+          <div className="relative w-40 aspect-[9/16] rounded-xl overflow-hidden bg-stone-900 border border-stone-200">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewImage}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover transition-transform"
+              style={{
+                objectPosition: positionStr,
+                transform: `scale(${scale})`,
+                transformOrigin: positionStr,
+              }}
+            />
+            <div className="absolute inset-0 bg-black/10" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25" />
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-2 pointer-events-none">
+              <p className="font-serif text-white tracking-[0.18em] text-sm leading-none" style={{ textShadow: '0 0 12px rgba(255,253,230,0.5)' }}>
+                {heroTitle || 'Allceramic'}
+              </p>
+              <p className="mt-2 text-white/70 tracking-[0.2em] text-[7px] uppercase">
+                {heroSubtitle || ''}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 컨트롤 */}
+        <div className="space-y-4 pt-2 border-t border-stone-100">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <div className="flex items-baseline justify-between mb-1">
+                <label className="text-xs text-stone-500">가로 위치</label>
+                <span className="text-xs text-stone-400 tabular-nums">{posX.toFixed(0)}%</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={posX}
+                onChange={e => setPosX(Number(e.target.value))}
+                className="w-full accent-stone-900"
+              />
+            </div>
+            <div>
+              <div className="flex items-baseline justify-between mb-1">
+                <label className="text-xs text-stone-500">세로 위치</label>
+                <span className="text-xs text-stone-400 tabular-nums">{posY.toFixed(0)}%</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={posY}
+                onChange={e => setPosY(Number(e.target.value))}
+                className="w-full accent-stone-900"
+              />
+            </div>
+            <div>
+              <div className="flex items-baseline justify-between mb-1">
+                <label className="text-xs text-stone-500">확대</label>
+                <span className="text-xs text-stone-400 tabular-nums">{scale.toFixed(2)}×</span>
+              </div>
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.05}
+                value={scale}
+                onChange={e => setScale(Number(e.target.value))}
+                className="w-full accent-stone-900"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
@@ -110,13 +237,19 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
             </button>
             {heroImageUrl && (
               <button
-                onClick={() => setHeroImageUrl(null)}
+                onClick={() => { setHeroImageUrl(null); resetTransform() }}
                 disabled={uploading}
                 className="text-xs tracking-wider text-stone-500 hover:text-rose-500 rounded-full px-4 py-1.5 transition-colors disabled:opacity-50"
               >
                 기본값으로
               </button>
             )}
+            <button
+              onClick={resetTransform}
+              className="text-xs tracking-wider text-stone-500 hover:text-stone-900 rounded-full px-4 py-1.5 transition-colors"
+            >
+              위치·확대 초기화
+            </button>
             <input
               ref={fileInputRef}
               type="file"

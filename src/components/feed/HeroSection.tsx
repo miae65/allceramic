@@ -4,36 +4,45 @@ import { createClient } from '@/lib/supabase/server'
 const DEFAULT_IMAGE = '/hero.jpg'
 const DEFAULT_TITLE = 'Allceramic'
 const DEFAULT_SUBTITLE = 'A curated space for ceramic arts'
+const DEFAULT_POSITION = '50% 50%'
 
 async function fetchHero() {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data } = await (supabase as any)
     .from('site_settings')
-    .select('hero_image_url, hero_title, hero_subtitle')
+    .select('hero_image_url, hero_title, hero_subtitle, hero_object_position, hero_scale')
     .eq('id', 1)
     .single()
   return {
     image: (data?.hero_image_url as string | null) || DEFAULT_IMAGE,
     title: (data?.hero_title as string | null) || DEFAULT_TITLE,
     subtitle: (data?.hero_subtitle as string | null) || DEFAULT_SUBTITLE,
+    position: (data?.hero_object_position as string | null) || DEFAULT_POSITION,
+    scale: Number(data?.hero_scale ?? 1) || 1,
   }
 }
 
 export async function HeroSection() {
-  const { image, title, subtitle } = await fetchHero()
+  const { image, title, subtitle, position, scale } = await fetchHero()
 
   return (
     <section className="relative h-[72vh] flex items-center justify-center overflow-hidden">
-      <Image
-        src={image}
-        alt=""
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover"
-        style={{ objectPosition: 'center 50%' }}
-      />
+      <div className="absolute inset-0 overflow-hidden">
+        <Image
+          src={image}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+          style={{
+            objectPosition: position,
+            transform: `scale(${scale})`,
+            transformOrigin: position,
+          }}
+        />
+      </div>
 
       {/* 딤 */}
       <div className="absolute inset-0 bg-black/10" />
