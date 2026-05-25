@@ -62,7 +62,6 @@ export function AdminInquiryRow({ inquiry }: { inquiry: Inquiry }) {
         .from('inquiries')
         .update({
           admin_reply: reply.trim() || null,
-          status: 'resolved',
           updated_at: new Date().toISOString(),
         })
         .eq('id', inquiry.id)
