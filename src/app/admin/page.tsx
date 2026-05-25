@@ -13,10 +13,9 @@ async function fetchStats() {
   const startOfWeek = new Date(startOfToday)
   startOfWeek.setDate(startOfWeek.getDate() - 6) // 오늘 포함 7일
 
-  const [posts, users, comments, inquiriesPending, inquiriesAll, notices, newToday, newWeek] = await Promise.all([
+  const [posts, users, inquiriesPending, inquiriesAll, notices, newToday, newWeek] = await Promise.all([
     sb.from('posts').select('*', { count: 'exact', head: true }),
     sb.from('profiles').select('*', { count: 'exact', head: true }),
-    sb.from('comments').select('*', { count: 'exact', head: true }),
     sb.from('inquiries').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     sb.from('inquiries').select('*', { count: 'exact', head: true }),
     sb.from('notices').select('*', { count: 'exact', head: true }),
@@ -27,7 +26,6 @@ async function fetchStats() {
   return {
     posts: posts.count ?? 0,
     users: users.count ?? 0,
-    comments: comments.count ?? 0,
     inquiriesPending: inquiriesPending.count ?? 0,
     inquiriesAll: inquiriesAll.count ?? 0,
     notices: notices.count ?? 0,
@@ -64,7 +62,6 @@ export default async function AdminHomePage() {
     { label: '회원', value: stats.users },
     { label: '신규 가입 (오늘)', value: stats.newToday, sub: `최근 7일 ${stats.newWeek}명` },
     { label: '게시물', value: stats.posts },
-    { label: '댓글', value: stats.comments },
     { label: '문의 (대기)', value: stats.inquiriesPending, sub: `전체 ${stats.inquiriesAll}` },
     { label: '공지', value: stats.notices },
   ]
@@ -76,7 +73,7 @@ export default async function AdminHomePage() {
         <p className="text-xs text-stone-400 tracking-wider uppercase mt-1">전체 현황</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {tiles.map(t => (
           <div key={t.label} className="bg-white rounded-2xl border border-stone-100 p-6">
             <p className="text-xs text-stone-400 tracking-wider uppercase">{t.label}</p>
