@@ -47,7 +47,7 @@ export function ProfileHeader({ profile, postCount, isOwn = false, isFavorited =
         </div>
 
         {/* 닉네임 */}
-        <h1 className="font-serif text-2xl text-stone-900 tracking-wide mb-2">
+        <h1 className="font-sans text-2xl text-stone-900 tracking-wide mb-2">
           {profile.username}
         </h1>
 
