@@ -30,8 +30,18 @@ async function fetchLatestNotice(): Promise<Notice | null> {
   return rows[0] ?? null
 }
 
+async function recordVisit() {
+  try {
+    const supabase = await createClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).rpc('record_visit')
+  } catch (e) {
+    console.error('[record_visit]', e)
+  }
+}
+
 export default async function HomePage() {
-  const [posts, notice] = await Promise.all([fetchPosts(), fetchLatestNotice()])
+  const [posts, notice] = await Promise.all([fetchPosts(), fetchLatestNotice(), recordVisit()])
 
   return (
     <div>

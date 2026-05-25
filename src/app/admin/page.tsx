@@ -13,24 +13,26 @@ async function fetchStats() {
   const startOfWeek = new Date(startOfToday)
   startOfWeek.setDate(startOfWeek.getDate() - 6) // 오늘 포함 7일
 
-  const [posts, users, inquiriesPending, inquiriesAll, notices, newToday, newWeek] = await Promise.all([
-    sb.from('posts').select('*', { count: 'exact', head: true }),
+  const todayDate = new Date().toISOString().slice(0, 10)
+
+  const [users, inquiriesPending, inquiriesAll, notices, newToday, newWeek, visitsRow] = await Promise.all([
     sb.from('profiles').select('*', { count: 'exact', head: true }),
     sb.from('inquiries').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     sb.from('inquiries').select('*', { count: 'exact', head: true }),
     sb.from('notices').select('*', { count: 'exact', head: true }),
     sb.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', startOfToday.toISOString()),
     sb.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', startOfWeek.toISOString()),
+    sb.from('daily_visits').select('count').eq('visit_date', todayDate).maybeSingle(),
   ])
 
   return {
-    posts: posts.count ?? 0,
     users: users.count ?? 0,
     inquiriesPending: inquiriesPending.count ?? 0,
     inquiriesAll: inquiriesAll.count ?? 0,
     notices: notices.count ?? 0,
     newToday: newToday.count ?? 0,
     newWeek: newWeek.count ?? 0,
+    visitsToday: (visitsRow.data?.count as number | undefined) ?? 0,
   }
 }
 
@@ -59,9 +61,9 @@ export default async function AdminHomePage() {
   const recent = await fetchRecent()
 
   const tiles = [
-    { label: '회원', value: stats.users },
     { label: '신규 가입 (오늘)', value: stats.newToday, sub: `최근 7일 ${stats.newWeek}명` },
-    { label: '게시물', value: stats.posts },
+    { label: '회원', value: stats.users },
+    { label: '오늘 방문자', value: stats.visitsToday, sub: '홈 페이지뷰' },
     { label: '문의 (대기)', value: stats.inquiriesPending, sub: `전체 ${stats.inquiriesAll}` },
     { label: '공지', value: stats.notices },
   ]
