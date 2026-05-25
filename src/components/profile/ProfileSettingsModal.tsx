@@ -8,8 +8,8 @@ import { XMarkIcon, UserIcon } from '@/components/ui/icons'
 
 type Props = {
   userId: string
-  currentUsername: string
-  currentAvatarUrl: string | null
+  currentUsername?: string
+  currentAvatarUrl?: string | null
   onClose: () => void
 }
 
@@ -18,11 +18,34 @@ const USERNAME_RE = /^[a-zA-Z0-9._-]{2,30}$/
 export function ProfileSettingsModal({ userId, currentUsername, currentAvatarUrl, onClose }: Props) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [username, setUsername] = useState(currentUsername)
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(currentAvatarUrl)
+  const [username, setUsername] = useState(currentUsername ?? '')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(currentAvatarUrl ?? null)
+  const [originalUsername, setOriginalUsername] = useState(currentUsername ?? '')
+  const [loadingProfile, setLoadingProfile] = useState(currentUsername === undefined)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // props로 안 받았으면 직접 fetch
+  useEffect(() => {
+    if (currentUsername !== undefined) return
+    let cancelled = false
+    ;(async () => {
+      const supabase = createClient()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase as any)
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', userId)
+        .single()
+      if (cancelled || !data) return
+      setUsername(data.username ?? '')
+      setOriginalUsername(data.username ?? '')
+      setAvatarUrl(data.avatar_url ?? null)
+      setLoadingProfile(false)
+    })()
+    return () => { cancelled = true }
+  }, [userId, currentUsername])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -78,8 +101,7 @@ export function ProfileSettingsModal({ userId, currentUsername, currentAvatarUrl
         throw new Error(e.message)
       }
       onClose()
-      // 닉네임이 바뀌었으면 새 username의 프로필 페이지로 이동
-      if (trimmed !== currentUsername) {
+      if (trimmed !== originalUsername) {
         router.push(`/profile/${trimmed}`)
       } else {
         router.refresh()
@@ -165,7 +187,7 @@ export function ProfileSettingsModal({ userId, currentUsername, currentAvatarUrl
             </button>
             <button
               onClick={save}
-              disabled={saving || uploading}
+              disabled={saving || uploading || loadingProfile}
               className="text-xs tracking-[0.18em] uppercase font-medium text-white bg-stone-900 rounded-full px-6 py-2 hover:bg-stone-700 transition-colors disabled:opacity-50"
             >
               {saving ? '저장중' : '저장'}

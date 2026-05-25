@@ -11,6 +11,7 @@ import { UploadModal } from '@/components/upload/UploadModal'
 import { UploadBlockedAlert } from '@/components/upload/UploadBlockedAlert'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { InquiryModal } from '@/components/inquiry/InquiryModal'
+import { ProfileSettingsModal } from '@/components/profile/ProfileSettingsModal'
 import { isAdmin } from '@/lib/admin'
 
 export function GNB() {
@@ -18,6 +19,7 @@ export function GNB() {
   const [uploadOpen, setUploadOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
   const [inquiryOpen, setInquiryOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [blockedAlertOpen, setBlockedAlertOpen] = useState(false)
   const { user } = useAuth()
 
@@ -85,6 +87,7 @@ export function GNB() {
               onUploadClick={tryOpenUpload}
               onAuthRequired={() => setAuthOpen(true)}
               onInquiryClick={() => handleProtected(() => setInquiryOpen(true))}
+              onSettingsClick={() => handleProtected(() => setSettingsOpen(true))}
             />
           </div>
         </nav>
@@ -93,6 +96,9 @@ export function GNB() {
       {uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} />}
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
       {inquiryOpen && <InquiryModal onClose={() => setInquiryOpen(false)} />}
+      {settingsOpen && user && (
+        <ProfileSettingsModal userId={user.id} onClose={() => setSettingsOpen(false)} />
+      )}
       {blockedAlertOpen && <UploadBlockedAlert onClose={() => setBlockedAlertOpen(false)} />}
     </>
   )
@@ -105,6 +111,7 @@ function ProfileDropdown({
   unreadCount,
   onSignOut,
   onInquiryClick,
+  onSettingsClick,
 }: {
   username: string
   avatarUrl?: string
@@ -112,6 +119,7 @@ function ProfileDropdown({
   unreadCount: number
   onSignOut: () => void
   onInquiryClick: () => void
+  onSettingsClick: () => void
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -185,6 +193,12 @@ function ProfileDropdown({
             </Link>
           )}
           <button
+            onClick={() => { setOpen(false); onSettingsClick() }}
+            className="w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
+          >
+            설정
+          </button>
+          <button
             onClick={() => { setOpen(false); onSignOut() }}
             className="w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors border-t border-stone-100"
           >
@@ -200,10 +214,12 @@ function AuthButtons({
   onUploadClick,
   onAuthRequired,
   onInquiryClick,
+  onSettingsClick,
 }: {
   onUploadClick: () => void
   onAuthRequired: () => void
   onInquiryClick: () => void
+  onSettingsClick: () => void
 }) {
   const { user, loading } = useAuth()
   const pathname = usePathname()
@@ -246,6 +262,7 @@ function AuthButtons({
           unreadCount={unreadCount}
           onSignOut={signOut}
           onInquiryClick={onInquiryClick}
+          onSettingsClick={onSettingsClick}
         />
         <button
           onClick={onUploadClick}
