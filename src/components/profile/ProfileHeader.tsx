@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { BookmarkIcon } from '@/components/ui/icons'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { AuthModal } from '@/components/auth/AuthModal'
@@ -64,15 +63,8 @@ export function ProfileHeader({ profile, postCount, isOwn = false, isFavorited =
           {postCount} {postCount === 1 ? 'post' : 'posts'}
         </p>
 
-        {/* 액션 버튼 */}
-        {isOwn ? (
-          <Link
-            href="/settings/profile"
-            className="text-xs tracking-[0.18em] uppercase text-stone-700 border border-stone-300 rounded-full px-5 py-2 hover:border-stone-700 transition-colors"
-          >
-            Edit Profile
-          </Link>
-        ) : (
+        {/* 액션 버튼 — 본인 프로필은 없음 */}
+        {!isOwn && (
           <button
             onClick={handleSave}
             className={`inline-flex items-center gap-2 text-xs tracking-[0.18em] uppercase rounded-full px-5 py-2 border transition-colors ${

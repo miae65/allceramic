@@ -84,7 +84,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           />
           <div className="border-t border-stone-100" />
         </div>
-        <FeedGrid posts={posts} label="Works" />
+        <FeedGrid posts={posts} label="게시물" />
       </div>
       <StickyAdBanner />
     </>
