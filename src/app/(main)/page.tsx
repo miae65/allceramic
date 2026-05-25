@@ -1,5 +1,4 @@
 import { HeroSection } from '@/components/feed/HeroSection'
-import { HighlightPost } from '@/components/feed/HighlightPost'
 import { FeedGrid } from '@/components/feed/FeedGrid'
 import { createClient } from '@/lib/supabase/server'
 import type { Post } from '@/types'
@@ -19,12 +18,10 @@ async function fetchPosts(): Promise<Post[]> {
 
 export default async function HomePage() {
   const posts = await fetchPosts()
-  const highlight = [...posts].sort((a, b) => b.like_count - a.like_count)[0]
 
   return (
     <div>
       <HeroSection />
-      {highlight && <HighlightPost post={highlight} />}
       <FeedGrid posts={posts} columns={4} label="게시물" emptyMessage="아직 게시물이 없습니다" />
     </div>
   )
