@@ -140,6 +140,13 @@ function ProfileDropdown({
 
       {open && (
         <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden z-50">
+          <Link
+            href="/profile/me"
+            onClick={() => setOpen(false)}
+            className="block w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
+          >
+            마이페이지
+          </Link>
           <button
             onClick={() => { setOpen(false); onInquiryClick() }}
             className="w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
@@ -209,9 +216,6 @@ function AuthButtons({
         >
           <PlusIcon className="w-5 h-5" />
         </button>
-        <Link href="/profile/me" className="hover:text-stone-900 transition-colors">
-          마이페이지
-        </Link>
       </>
     )
   }
