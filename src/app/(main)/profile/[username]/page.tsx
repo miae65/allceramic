@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { FeedGrid } from '@/components/feed/FeedGrid'
-import { StickyAdBanner } from '@/components/ui/StickyAdBanner'
 import type { Post, Profile } from '@/types'
 
 async function fetchProfile(username: string): Promise<{ profile: Profile; posts: Post[] } | null> {
@@ -74,19 +73,16 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   }
 
   return (
-    <>
-      <div className="pb-20">
-        <div className="max-w-5xl mx-auto px-6">
-          <ProfileHeader
-            profile={profile}
-            postCount={posts.length}
-            isOwn={isOwn}
-          />
-          <div className="border-t border-stone-100" />
-        </div>
-        <FeedGrid posts={posts} label="게시물" />
+    <div className="pb-20">
+      <div className="max-w-5xl mx-auto px-6">
+        <ProfileHeader
+          profile={profile}
+          postCount={posts.length}
+          isOwn={isOwn}
+        />
+        <div className="border-t border-stone-100" />
       </div>
-      <StickyAdBanner />
-    </>
+      <FeedGrid posts={posts} label="게시물" />
+    </div>
   )
 }
