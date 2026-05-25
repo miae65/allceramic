@@ -115,36 +115,78 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
           <p className="text-xs text-stone-300">실제 노출 영역과 동일한 비율로 미리보기</p>
         </div>
 
-        {/* 데스크탑 미리보기 (실제 hero는 100vw × 72vh, 노트북 기준 약 21:9) */}
+        {/* 데스크탑 미리보기 — 좌측 세로 위치 + 하단 가로 위치 슬라이더 */}
         <div>
           <p className="text-xs text-stone-400 mb-2">데스크탑 (가로 화면)</p>
-          <div className="relative w-full aspect-[21/9] rounded-xl overflow-hidden bg-stone-900 border border-stone-200">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={previewImage}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover transition-transform"
-              style={{
-                objectPosition: positionStr,
-                transform: `scale(${scale})`,
-                transformOrigin: positionStr,
-              }}
-            />
-            <div className="absolute inset-0 bg-black/10" />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25" />
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
-              <p
-                className="font-serif text-white tracking-[0.18em] leading-none"
+          <div className="grid grid-cols-[40px_1fr] gap-2">
+            {/* 좌측 세로 슬라이더 */}
+            <div className="flex flex-col items-center justify-between py-1">
+              <span className="text-[10px] text-stone-400 tabular-nums">{posY.toFixed(0)}%</span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={posY}
+                onChange={e => setPosY(Number(e.target.value))}
+                aria-label="세로 위치"
+                aria-orientation="vertical"
+                className="accent-stone-900 flex-1 my-1"
                 style={{
-                  fontSize: 'clamp(1.5rem, 5vw, 3rem)',
-                  textShadow: '0 0 24px rgba(255,253,230,0.5), 0 0 60px rgba(255,253,230,0.3)',
-                }}
-              >
-                {heroTitle || 'Allceramic'}
-              </p>
-              <p className="mt-3 text-white/70 tracking-[0.25em] text-[10px] uppercase">
-                {heroSubtitle || 'A curated space for ceramic arts'}
-              </p>
+                  writingMode: 'vertical-lr',
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  WebkitAppearance: 'slider-vertical' as any,
+                  width: 24,
+                } as React.CSSProperties}
+              />
+              <span className="text-[10px] text-stone-500">세로</span>
+            </div>
+            {/* 우측: 이미지 + 하단 가로 슬라이더 */}
+            <div className="space-y-2">
+              <div className="relative w-full aspect-[21/9] rounded-xl overflow-hidden bg-stone-900 border border-stone-200">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={previewImage}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover transition-transform"
+                  style={{
+                    objectPosition: positionStr,
+                    transform: `scale(${scale})`,
+                    transformOrigin: positionStr,
+                  }}
+                />
+                <div className="absolute inset-0 bg-black/10" />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25" />
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
+                  <p
+                    className="font-serif text-white tracking-[0.18em] leading-none"
+                    style={{
+                      fontSize: 'clamp(1.5rem, 5vw, 3rem)',
+                      textShadow: '0 0 24px rgba(255,253,230,0.5), 0 0 60px rgba(255,253,230,0.3)',
+                    }}
+                  >
+                    {heroTitle || 'Allceramic'}
+                  </p>
+                  <p className="mt-3 text-white/70 tracking-[0.25em] text-[10px] uppercase">
+                    {heroSubtitle || 'A curated space for ceramic arts'}
+                  </p>
+                </div>
+              </div>
+              {/* 하단 가로 슬라이더 */}
+              <div className="flex items-center gap-2 px-1">
+                <span className="text-[10px] text-stone-500 w-8">가로</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={posX}
+                  onChange={e => setPosX(Number(e.target.value))}
+                  aria-label="가로 위치"
+                  className="flex-1 accent-stone-900"
+                />
+                <span className="text-[10px] text-stone-400 tabular-nums w-10 text-right">{posX.toFixed(0)}%</span>
+              </div>
             </div>
           </div>
         </div>
@@ -179,52 +221,20 @@ export function AdminSettingsForm({ initial }: { initial: SiteSettings }) {
 
         {/* 컨트롤 */}
         <div className="space-y-4 pt-2 border-t border-stone-100">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <div className="flex items-baseline justify-between mb-1">
-                <label className="text-xs text-stone-500">가로 위치</label>
-                <span className="text-xs text-stone-400 tabular-nums">{posX.toFixed(0)}%</span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                step={1}
-                value={posX}
-                onChange={e => setPosX(Number(e.target.value))}
-                className="w-full accent-stone-900"
-              />
+          <div>
+            <div className="flex items-baseline justify-between mb-1">
+              <label className="text-xs text-stone-500">확대</label>
+              <span className="text-xs text-stone-400 tabular-nums">{scale.toFixed(2)}×</span>
             </div>
-            <div>
-              <div className="flex items-baseline justify-between mb-1">
-                <label className="text-xs text-stone-500">세로 위치</label>
-                <span className="text-xs text-stone-400 tabular-nums">{posY.toFixed(0)}%</span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                step={1}
-                value={posY}
-                onChange={e => setPosY(Number(e.target.value))}
-                className="w-full accent-stone-900"
-              />
-            </div>
-            <div>
-              <div className="flex items-baseline justify-between mb-1">
-                <label className="text-xs text-stone-500">확대</label>
-                <span className="text-xs text-stone-400 tabular-nums">{scale.toFixed(2)}×</span>
-              </div>
-              <input
-                type="range"
-                min={1}
-                max={3}
-                step={0.05}
-                value={scale}
-                onChange={e => setScale(Number(e.target.value))}
-                className="w-full accent-stone-900"
-              />
-            </div>
+            <input
+              type="range"
+              min={1}
+              max={3}
+              step={0.05}
+              value={scale}
+              onChange={e => setScale(Number(e.target.value))}
+              className="w-full accent-stone-900"
+            />
           </div>
 
           <div className="flex items-center gap-2">
