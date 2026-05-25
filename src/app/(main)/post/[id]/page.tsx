@@ -72,7 +72,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
         className="inline-flex items-center gap-1 text-stone-400 hover:text-stone-700 transition-colors text-sm mb-8"
       >
         <ChevronLeftIcon className="w-4 h-4" />
-        <span>Back</span>
+        <span>뒤로</span>
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-10 lg:gap-14 items-start">
