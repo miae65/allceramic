@@ -1,8 +1,13 @@
 import { type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
+import { recordVisitIfNeeded } from '@/lib/visit-tracker'
 
 export async function proxy(request: NextRequest) {
-  return await updateSession(request)
+  const response = await updateSession(request)
+  if (request.nextUrl.pathname === '/') {
+    await recordVisitIfNeeded(request, response)
+  }
+  return response
 }
 
 export const config = {
