@@ -51,7 +51,7 @@ export function GNB() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-40 h-16 bg-white/90 backdrop-blur-sm border-b border-stone-100">
-        <nav className="max-w-5xl mx-auto h-full px-6 flex items-center justify-between">
+        <nav className="w-full h-full pr-6 flex items-center justify-between">
           {/* 좌측 */}
           <div className="flex items-center gap-6">
             <Link
@@ -59,25 +59,6 @@ export function GNB() {
               className="font-serif text-xl tracking-widest text-stone-900 hover:text-stone-600 transition-colors"
             >
               Allceramic
-            </Link>
-            <Link
-              href="/favorites"
-              aria-label="즐겨찾기"
-              className={`text-stone-500 hover:text-stone-900 transition-colors ${
-                pathname === '/favorites' ? 'text-stone-900' : ''
-              }`}
-            >
-              <BookmarkIcon className="w-5 h-5" />
-            </Link>
-            <Link
-              href="/board"
-              className={`text-sm transition-colors ${
-                pathname.startsWith('/board')
-                  ? 'text-stone-900 font-medium'
-                  : 'text-stone-500 hover:text-stone-900'
-              }`}
-            >
-              자유게시판
             </Link>
             <Link
               href="/jobs"
@@ -89,10 +70,39 @@ export function GNB() {
             >
               구인·구직
             </Link>
+            <Link
+              href="/info"
+              className={`text-sm transition-colors ${
+                pathname.startsWith('/info')
+                  ? 'text-stone-900 font-medium'
+                  : 'text-stone-500 hover:text-stone-900'
+              }`}
+            >
+              정보공유
+            </Link>
+            <Link
+              href="/board"
+              className={`text-sm transition-colors ${
+                pathname.startsWith('/board')
+                  ? 'text-stone-900 font-medium'
+                  : 'text-stone-500 hover:text-stone-900'
+              }`}
+            >
+              자유게시판
+            </Link>
           </div>
 
           {/* 우측 */}
           <div className="flex items-center gap-5 text-sm text-stone-600">
+            <Link
+              href="/favorites"
+              aria-label="즐겨찾기"
+              className={`text-stone-500 hover:text-stone-900 transition-colors ${
+                pathname === '/favorites' ? 'text-stone-900' : ''
+              }`}
+            >
+              <BookmarkIcon className="w-5 h-5" />
+            </Link>
             <AuthButtons
               onUploadClick={tryOpenUpload}
               onAuthRequired={() => setAuthOpen(true)}

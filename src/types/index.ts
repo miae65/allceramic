@@ -97,6 +97,30 @@ export type BoardComment = {
   profile?: Profile
 }
 
+export type InfoPost = {
+  id: string
+  user_id: string
+  title: string
+  content: string
+  view_count: number
+  created_at: string
+  updated_at: string
+  // joined
+  profile?: Profile
+  comment_count?: number
+}
+
+export type InfoComment = {
+  id: string
+  post_id: string
+  user_id: string
+  content: string
+  created_at: string
+  updated_at: string
+  // joined
+  profile?: Profile
+}
+
 export type JobKind = 'hiring' | 'seeking'
 
 export type JobPost = {
