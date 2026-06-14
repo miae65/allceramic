@@ -128,7 +128,7 @@ export function CommentSection({ postId, initialComments }: Props) {
   return (
     <div className="pt-5 border-t border-stone-100">
       <p className="text-xs tracking-widest text-stone-400 uppercase mb-6">
-        Comments {comments.length > 0 && `(${comments.length})`}
+        댓글 {comments.length > 0 && `(${comments.length})`}
       </p>
 
       {/* 입력창 */}
