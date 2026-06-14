@@ -21,6 +21,7 @@ export function GNB() {
   const [inquiryOpen, setInquiryOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [blockedAlertOpen, setBlockedAlertOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { user } = useAuth()
 
   const handleProtected = (action: () => void) => {
@@ -48,54 +49,42 @@ export function GNB() {
     setUploadOpen(true)
   }
 
+  const navItems = [
+    { href: '/jobs', label: '구인·구직', isActive: pathname.startsWith('/jobs') },
+    { href: '/info', label: '정보공유', isActive: pathname.startsWith('/info') },
+    { href: '/board', label: '자유게시판', isActive: pathname.startsWith('/board') },
+  ]
+
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-40 h-16 bg-white/90 backdrop-blur-sm border-b border-stone-100">
-        <nav className="w-full h-full pr-[44px] flex items-center justify-between">
+        <nav className="w-full h-full pr-[16px] flex items-center justify-between">
           {/* 좌측 */}
           <div className="flex items-center gap-6">
             <Link
               href="/"
-              className="ml-[50px] font-serif text-2xl font-medium tracking-widest text-stone-700 hover:text-stone-500 transition-colors"
+              className="ml-[20px] md:ml-[50px] font-serif text-2xl font-medium tracking-widest text-stone-700 hover:text-stone-500 transition-colors"
             >
               Allceramic
             </Link>
-            <div className="ml-[15px] flex items-center gap-[19px]">
-              <Link
-                href="/jobs"
-                className={`text-sm transition-colors ${
-                  pathname.startsWith('/jobs')
-                    ? 'text-stone-900 font-medium'
-                    : 'text-stone-500 hover:text-stone-900'
-                }`}
-              >
-                구인·구직
-              </Link>
-              <Link
-                href="/info"
-                className={`text-sm transition-colors ${
-                  pathname.startsWith('/info')
-                    ? 'text-stone-900 font-medium'
-                    : 'text-stone-500 hover:text-stone-900'
-                }`}
-              >
-                정보공유
-              </Link>
-              <Link
-                href="/board"
-                className={`text-sm transition-colors ${
-                  pathname.startsWith('/board')
-                    ? 'text-stone-900 font-medium'
-                    : 'text-stone-500 hover:text-stone-900'
-                }`}
-              >
-                자유게시판
-              </Link>
+            {/* 데스크탑 메뉴 */}
+            <div className="ml-[15px] hidden md:flex items-center gap-[19px]">
+              {navItems.map(item => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`text-sm transition-colors ${
+                    item.isActive ? 'text-stone-900 font-medium' : 'text-stone-500 hover:text-stone-900'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
             </div>
           </div>
 
           {/* 우측 */}
-          <div className="flex items-center gap-5 text-sm text-stone-600">
+          <div className="flex items-center gap-3 text-sm text-stone-600">
             <Link
               href="/favorites"
               aria-label="즐겨찾기"
@@ -111,8 +100,48 @@ export function GNB() {
               onInquiryClick={() => handleProtected(() => setInquiryOpen(true))}
               onSettingsClick={() => handleProtected(() => setSettingsOpen(true))}
             />
+            {/* 모바일 햄버거 */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(o => !o)}
+              aria-label={mobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
+              aria-expanded={mobileMenuOpen}
+              className="md:hidden text-stone-500 hover:text-stone-900 transition-colors"
+            >
+              {mobileMenuOpen ? (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              ) : (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                  <path d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
+              )}
+            </button>
           </div>
         </nav>
+
+        {/* 모바일 메뉴 패널 */}
+        {mobileMenuOpen && (
+          <div className="md:hidden absolute top-16 left-0 right-0 bg-white border-b border-stone-100 shadow-sm">
+            <div className="flex flex-col py-2">
+              {navItems.map(item => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`px-6 py-3 text-sm transition-colors ${
+                    item.isActive
+                      ? 'text-stone-900 font-medium bg-stone-50'
+                      : 'text-stone-600 hover:bg-stone-50'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </header>
 
       {uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} />}
