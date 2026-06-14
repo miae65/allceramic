@@ -11,12 +11,11 @@ import type { Profile } from '@/types'
 
 type Props = {
   profile: Profile
-  postCount: number
   isOwn?: boolean
   isFavorited?: boolean
 }
 
-export function ProfileHeader({ profile, postCount, isOwn = false, isFavorited = false }: Props) {
+export function ProfileHeader({ profile, isOwn = false, isFavorited = false }: Props) {
   const router = useRouter()
   const { user } = useAuth()
   const [favorited, setFavorited] = useState(isFavorited)
@@ -87,9 +86,7 @@ export function ProfileHeader({ profile, postCount, isOwn = false, isFavorited =
           </p>
         )}
 
-        <p className="text-xs text-stone-400 tabular-nums mb-6">
-          {postCount} {postCount === 1 ? 'post' : 'posts'}
-        </p>
+        <div className="mb-6" />
 
         {!isOwn && (
           <button

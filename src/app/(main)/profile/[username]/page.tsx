@@ -87,7 +87,6 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
       <div className="max-w-5xl mx-auto px-6">
         <ProfileHeader
           profile={profile}
-          postCount={posts.length}
           isOwn={isOwn}
           isFavorited={isFavorited}
         />
