@@ -79,6 +79,16 @@ export function GNB() {
             >
               자유게시판
             </Link>
+            <Link
+              href="/jobs"
+              className={`text-sm transition-colors ${
+                pathname.startsWith('/jobs')
+                  ? 'text-stone-900 font-medium'
+                  : 'text-stone-500 hover:text-stone-900'
+              }`}
+            >
+              구인·구직
+            </Link>
           </div>
 
           {/* 우측 */}

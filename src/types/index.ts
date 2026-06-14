@@ -97,6 +97,45 @@ export type BoardComment = {
   profile?: Profile
 }
 
+export type JobKind = 'hiring' | 'seeking'
+
+export type JobPost = {
+  id: string
+  user_id: string
+  kind: JobKind
+  title: string
+  position: string
+  region: string
+  work_type: string
+  contact: string
+  content: string
+  // 구인 전용
+  company_name: string | null
+  salary: string | null
+  experience_required: string | null
+  deadline: string | null
+  // 구직 전용
+  experience: string | null
+  portfolio_url: string | null
+  available_from: string | null
+  view_count: number
+  created_at: string
+  updated_at: string
+  // joined
+  profile?: Profile
+}
+
+export type JobComment = {
+  id: string
+  post_id: string
+  user_id: string
+  content: string
+  created_at: string
+  updated_at: string
+  // joined
+  profile?: Profile
+}
+
 export type SiteSettings = {
   id: number
   site_name: string

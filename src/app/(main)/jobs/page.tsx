@@ -1,0 +1,139 @@
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import type { JobKind, JobPost } from '@/types'
+
+type ListItem = JobPost & {
+  job_comments: { count: number }[]
+}
+
+async function fetchJobs(kind: JobKind) {
+  const supabase = await createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any)
+    .from('job_posts')
+    .select(
+      'id, kind, title, position, region, work_type, company_name, deadline, view_count, created_at, profile:profiles!job_posts_user_id_fkey(username), job_comments(count)'
+    )
+    .eq('kind', kind)
+    .order('created_at', { ascending: false })
+  return (data ?? []) as ListItem[]
+}
+
+export default async function JobsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ kind?: string }>
+}) {
+  const sp = await searchParams
+  const kind: JobKind = sp?.kind === 'seeking' ? 'seeking' : 'hiring'
+  const posts = await fetchJobs(kind)
+
+  return (
+    <div className="max-w-3xl mx-auto px-6 py-12">
+      <div className="flex items-end justify-between flex-wrap gap-4">
+        <div>
+          <p className="text-xs tracking-widest text-stone-400 uppercase mb-2">Community</p>
+          <h1 className="font-serif text-2xl text-stone-900">구인 · 구직</h1>
+          <p className="text-xs text-stone-400 mt-2">세라믹 업계의 채용 정보와 구직 소식을 나누는 공간입니다.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/jobs/my"
+            className="text-xs tracking-[0.15em] uppercase text-stone-500 border border-stone-200 rounded-full px-4 py-2 hover:border-stone-400 hover:text-stone-700 transition-colors"
+          >
+            내가 쓴 글
+          </Link>
+          <Link
+            href={`/jobs/write?kind=${kind}`}
+            className="text-xs tracking-[0.15em] uppercase text-stone-900 border border-stone-300 rounded-full px-4 py-2 hover:border-stone-700 transition-colors"
+          >
+            글쓰기
+          </Link>
+        </div>
+      </div>
+
+      {/* 탭 */}
+      <div className="mt-10 flex items-center gap-1 border-b border-stone-200">
+        <TabLink href="/jobs?kind=hiring" active={kind === 'hiring'} label="구인" />
+        <TabLink href="/jobs?kind=seeking" active={kind === 'seeking'} label="구직" />
+      </div>
+
+      <div className="mt-10">
+        {/* 컬럼 헤더 */}
+        <div className="flex items-center justify-between py-3 px-3 -mx-3 border-y border-stone-200 bg-stone-50/50 text-xs tracking-wider text-stone-500 uppercase">
+          <div className="flex items-center gap-4 min-w-0">
+            <span className="w-5 shrink-0" />
+            <span>제목</span>
+          </div>
+          <div className="flex items-center gap-4 shrink-0 ml-4">
+            <span className="hidden sm:block w-20 text-center">지역</span>
+            <span className="hidden md:block w-20 text-center">근무형태</span>
+            <span className="w-12 text-center">업로드</span>
+            <span className="hidden sm:block w-12 text-right">조회수</span>
+          </div>
+        </div>
+
+        {posts.length === 0 ? (
+          <p className="text-sm text-stone-400 text-center py-20">
+            {kind === 'hiring' ? '아직 구인 게시글이 없습니다.' : '아직 구직 게시글이 없습니다.'}
+          </p>
+        ) : (
+          <div className="divide-y divide-stone-100">
+            {posts.map((post, i) => {
+              const commentCount = post.job_comments?.[0]?.count ?? 0
+              return (
+                <Link
+                  key={post.id}
+                  href={`/jobs/${post.id}`}
+                  className="flex items-center justify-between py-4 group hover:bg-stone-50 -mx-3 px-3 rounded transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-xs text-stone-300 w-5 text-right shrink-0">{posts.length - i}</span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-sm text-stone-800 group-hover:text-stone-600 transition-colors truncate">
+                          {post.title}
+                        </span>
+                        {commentCount > 0 && (
+                          <span className="text-xs text-stone-400 shrink-0">[{commentCount}]</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-stone-400 mt-0.5 truncate">
+                        {kind === 'hiring' && post.company_name && <span>{post.company_name}</span>}
+                        {kind === 'hiring' && post.company_name && <span>·</span>}
+                        <span>{post.position}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 shrink-0 ml-4">
+                    <span className="text-xs text-stone-400 hidden sm:block w-20 text-center truncate">{post.region}</span>
+                    <span className="text-xs text-stone-400 hidden md:block w-20 text-center truncate">{post.work_type}</span>
+                    <span className="text-xs text-stone-300 w-12 text-center tabular-nums">
+                      {new Date(post.created_at).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })}
+                    </span>
+                    <span className="text-xs text-stone-300 hidden sm:block w-12 text-right tabular-nums">{post.view_count}</span>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function TabLink({ href, active, label }: { href: string; active: boolean; label: string }) {
+  return (
+    <Link
+      href={href}
+      className={`-mb-px px-5 py-2.5 text-sm tracking-wider border-b-2 transition-colors ${
+        active
+          ? 'border-stone-900 text-stone-900 font-medium'
+          : 'border-transparent text-stone-400 hover:text-stone-700'
+      }`}
+    >
+      {label}
+    </Link>
+  )
+}
