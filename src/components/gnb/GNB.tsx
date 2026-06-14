@@ -51,45 +51,47 @@ export function GNB() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-40 h-16 bg-white/90 backdrop-blur-sm border-b border-stone-100">
-        <nav className="w-full h-full pr-6 flex items-center justify-between">
+        <nav className="w-full h-full pr-[44px] flex items-center justify-between">
           {/* 좌측 */}
           <div className="flex items-center gap-6">
             <Link
               href="/"
-              className="font-serif text-xl tracking-widest text-stone-900 hover:text-stone-600 transition-colors"
+              className="ml-[50px] font-serif text-2xl font-medium tracking-widest text-stone-700 hover:text-stone-500 transition-colors"
             >
               Allceramic
             </Link>
-            <Link
-              href="/jobs"
-              className={`text-sm transition-colors ${
-                pathname.startsWith('/jobs')
-                  ? 'text-stone-900 font-medium'
-                  : 'text-stone-500 hover:text-stone-900'
-              }`}
-            >
-              구인·구직
-            </Link>
-            <Link
-              href="/info"
-              className={`text-sm transition-colors ${
-                pathname.startsWith('/info')
-                  ? 'text-stone-900 font-medium'
-                  : 'text-stone-500 hover:text-stone-900'
-              }`}
-            >
-              정보공유
-            </Link>
-            <Link
-              href="/board"
-              className={`text-sm transition-colors ${
-                pathname.startsWith('/board')
-                  ? 'text-stone-900 font-medium'
-                  : 'text-stone-500 hover:text-stone-900'
-              }`}
-            >
-              자유게시판
-            </Link>
+            <div className="ml-[15px] flex items-center gap-[19px]">
+              <Link
+                href="/jobs"
+                className={`text-sm transition-colors ${
+                  pathname.startsWith('/jobs')
+                    ? 'text-stone-900 font-medium'
+                    : 'text-stone-500 hover:text-stone-900'
+                }`}
+              >
+                구인·구직
+              </Link>
+              <Link
+                href="/info"
+                className={`text-sm transition-colors ${
+                  pathname.startsWith('/info')
+                    ? 'text-stone-900 font-medium'
+                    : 'text-stone-500 hover:text-stone-900'
+                }`}
+              >
+                정보공유
+              </Link>
+              <Link
+                href="/board"
+                className={`text-sm transition-colors ${
+                  pathname.startsWith('/board')
+                    ? 'text-stone-900 font-medium'
+                    : 'text-stone-500 hover:text-stone-900'
+                }`}
+              >
+                자유게시판
+              </Link>
+            </div>
           </div>
 
           {/* 우측 */}

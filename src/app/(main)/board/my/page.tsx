@@ -34,7 +34,6 @@ export default async function MyBoardPage() {
 
       <div className="flex items-end justify-between mb-[100px]">
         <div>
-          <p className="text-xs tracking-widest text-stone-400 uppercase mb-2">Community</p>
           <h1 className="font-serif text-2xl text-stone-900">내가 쓴 글</h1>
         </div>
       </div>

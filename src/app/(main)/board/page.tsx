@@ -20,7 +20,6 @@ export default async function BoardPage() {
       {/* 헤더 */}
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-xs tracking-widest text-stone-400 uppercase mb-2">Community</p>
           <h1 className="font-serif text-2xl text-stone-900">자유게시판</h1>
         </div>
         <div className="flex items-center gap-3">

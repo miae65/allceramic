@@ -88,7 +88,7 @@ export default async function MyJobsPage() {
                   <span className="text-xs text-stone-300 w-12 text-center tabular-nums">
                     {new Date(post.created_at).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })}
                   </span>
-                  <span className="text-xs text-stone-300 hidden sm:block w-12 text-right tabular-nums">{post.view_count}</span>
+                  <span className="text-xs text-stone-500 hidden sm:block w-12 text-right tabular-nums">{post.view_count}</span>
                 </div>
               </Link>
             )

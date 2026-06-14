@@ -19,7 +19,6 @@ export default async function InfoEditPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-12">
-      <p className="text-xs tracking-widest text-stone-400 uppercase mb-2">Community</p>
       <h1 className="font-serif text-2xl text-stone-900 mb-8">글 수정</h1>
       <InfoPostForm userId={user.id} postId={post.id} initialTitle={post.title} initialContent={post.content} />
     </div>

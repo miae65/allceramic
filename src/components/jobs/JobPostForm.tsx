@@ -19,7 +19,7 @@ const SEEKING_WORK_TYPES = ['정규직', '파트타임', '프리랜서', '협업
 export function JobPostForm({ userId, postId, initial, defaultKind = 'hiring' }: Props) {
   const router = useRouter()
   const editing = !!postId
-  const [kind, setKind] = useState<JobKind>((initial?.kind as JobKind) ?? defaultKind)
+  const kind: JobKind = (initial?.kind as JobKind) ?? defaultKind
 
   // 공통
   const [title, setTitle] = useState(initial?.title ?? '')
@@ -113,30 +113,6 @@ export function JobPostForm({ userId, postId, initial, defaultKind = 'hiring' }:
 
   return (
     <div className="space-y-5">
-      {/* 유형 토글 */}
-      {!editing && (
-        <div className="inline-flex rounded-full bg-stone-100 p-1">
-          <button
-            type="button"
-            onClick={() => setKind('hiring')}
-            className={`text-xs tracking-[0.15em] uppercase px-5 py-2 rounded-full transition-colors ${
-              kind === 'hiring' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-900'
-            }`}
-          >
-            구인
-          </button>
-          <button
-            type="button"
-            onClick={() => setKind('seeking')}
-            className={`text-xs tracking-[0.15em] uppercase px-5 py-2 rounded-full transition-colors ${
-              kind === 'seeking' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-900'
-            }`}
-          >
-            구직
-          </button>
-        </div>
-      )}
-
       <FormField label="제목" required>
         <input
           type="text"

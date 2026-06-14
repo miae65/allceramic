@@ -59,28 +59,18 @@ export default async function JobPostDetailPage({ params }: { params: Promise<{ 
   const canDelete = canEdit || isAdmin(user)
 
   const isHiring = post.kind === 'hiring'
-  const backHref = `/jobs?kind=${post.kind}`
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-10">
       <Link
-        href={backHref}
+        href="/jobs"
         className="inline-flex items-center gap-1 text-stone-400 hover:text-stone-700 transition-colors text-sm mb-8"
       >
         <ChevronLeftIcon className="w-4 h-4" />
-        <span>{isHiring ? '구인' : '구직'} 목록</span>
+        <span>구인/구직 목록</span>
       </Link>
 
       <article>
-        <div className="flex items-center gap-2 mb-2">
-          <span
-            className={`text-[10px] tracking-[0.15em] uppercase px-2 py-0.5 rounded-full ${
-              isHiring ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'
-            }`}
-          >
-            {isHiring ? '구인' : '구직'}
-          </span>
-        </div>
         <h1 className="text-xl font-medium text-stone-900 mb-3">{post.title}</h1>
         <div className="flex items-center justify-between gap-3 pb-5 border-b border-stone-100">
           <div className="flex items-center gap-3 text-xs text-stone-400 min-w-0 flex-wrap">
@@ -88,7 +78,11 @@ export default async function JobPostDetailPage({ params }: { params: Promise<{ 
               {post.profile?.username ?? '-'}
             </Link>
             <span>·</span>
-            <span className="tabular-nums">{new Date(post.created_at).toLocaleString('ko-KR')}</span>
+            <span className="tabular-nums">
+              {new Date(post.created_at)
+                .toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
+                .replace(/\.$/, '')}
+            </span>
             <span>·</span>
             <span className="tabular-nums">조회 {post.view_count + 1}</span>
           </div>

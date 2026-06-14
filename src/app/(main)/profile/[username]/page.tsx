@@ -70,6 +70,18 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
     isOwn = false
   }
 
+  let isFavorited = false
+  if (user && !isOwn && profile.id !== 'mock') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: favRow } = await (supabase as any)
+      .from('user_favorites')
+      .select('favorite_id')
+      .eq('user_id', user.id)
+      .eq('favorite_id', profile.id)
+      .maybeSingle()
+    isFavorited = !!favRow
+  }
+
   return (
     <div className="pb-20">
       <div className="max-w-5xl mx-auto px-6">
@@ -77,6 +89,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           profile={profile}
           postCount={posts.length}
           isOwn={isOwn}
+          isFavorited={isFavorited}
         />
         <div className="border-t border-stone-100" />
       </div>

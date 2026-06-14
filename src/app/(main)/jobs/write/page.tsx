@@ -17,8 +17,7 @@ export default async function JobWritePage({
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-12">
-      <p className="text-xs tracking-widest text-stone-400 uppercase mb-2">Community</p>
-      <h1 className="font-serif text-2xl text-stone-900 mb-8">구인·구직 글쓰기</h1>
+      <h1 className="font-serif text-2xl text-stone-900 mb-8">구인/구직 글쓰기</h1>
       <JobPostForm userId={user.id} defaultKind={defaultKind} />
     </div>
   )
