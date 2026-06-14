@@ -13,7 +13,10 @@ type Props = {
   onClose: () => void
 }
 
-const USERNAME_RE = /^[a-zA-Z0-9._-]{2,30}$/
+// 영문/숫자/_/-/.  · 2~20자
+const USERNAME_RE = /^[a-zA-Z0-9._-]{2,20}$/
+
+type Availability = 'idle' | 'checking' | 'available' | 'taken' | 'invalid'
 
 export function ProfileSettingsModal({ userId, currentUsername, currentAvatarUrl, onClose }: Props) {
   const router = useRouter()
@@ -24,9 +27,9 @@ export function ProfileSettingsModal({ userId, currentUsername, currentAvatarUrl
   const [loadingProfile, setLoadingProfile] = useState(currentUsername === undefined)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [availability, setAvailability] = useState<Availability>('idle')
   const [error, setError] = useState<string | null>(null)
 
-  // props로 안 받았으면 직접 fetch
   useEffect(() => {
     if (currentUsername !== undefined) return
     let cancelled = false
@@ -53,6 +56,42 @@ export function ProfileSettingsModal({ userId, currentUsername, currentAvatarUrl
     return () => window.removeEventListener('keydown', handler)
   }, [onClose])
 
+  const trimmedUsername = username.trim()
+
+  const onUsernameChange = (next: string) => {
+    setUsername(next)
+    setAvailability('idle')
+  }
+  const isUnchanged = trimmedUsername === originalUsername && originalUsername !== ''
+
+  const checkAvailability = async () => {
+    setError(null)
+    if (!USERNAME_RE.test(trimmedUsername)) {
+      setAvailability('invalid')
+      return
+    }
+    if (isUnchanged) {
+      setAvailability('available')
+      return
+    }
+    setAvailability('checking')
+    try {
+      const supabase = createClient()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error: e } = await (supabase as any)
+        .from('profiles')
+        .select('id')
+        .eq('username', trimmedUsername)
+        .neq('id', userId)
+        .maybeSingle()
+      if (e) throw new Error(e.message)
+      setAvailability(data ? 'taken' : 'available')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '중복확인 실패')
+      setAvailability('idle')
+    }
+  }
+
   const onPickFile = async (file: File) => {
     if (!file.type.startsWith('image/')) { setError('이미지 파일만 가능합니다'); return }
     setUploading(true)
@@ -76,9 +115,12 @@ export function ProfileSettingsModal({ userId, currentUsername, currentAvatarUrl
   }
 
   const save = async () => {
-    const trimmed = username.trim()
-    if (!USERNAME_RE.test(trimmed)) {
-      setError('닉네임은 영문/숫자/_/-/. 2~30자로 입력해주세요')
+    if (!USERNAME_RE.test(trimmedUsername)) {
+      setError('닉네임은 영문/숫자/_/-/. 2~20자로 입력해주세요')
+      return
+    }
+    if (!isUnchanged && availability !== 'available') {
+      setError('닉네임 중복확인을 먼저 해주세요')
       return
     }
     setSaving(true)
@@ -89,20 +131,21 @@ export function ProfileSettingsModal({ userId, currentUsername, currentAvatarUrl
       const { error: e } = await (supabase as any)
         .from('profiles')
         .update({
-          username: trimmed,
+          username: trimmedUsername,
           avatar_url: avatarUrl,
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId)
       if (e) {
         if (e.code === '23505' || /duplicate|unique/i.test(e.message)) {
+          setAvailability('taken')
           throw new Error('이미 사용 중인 닉네임입니다')
         }
         throw new Error(e.message)
       }
       onClose()
-      if (trimmed !== originalUsername) {
-        router.push(`/profile/${trimmed}`)
+      if (trimmedUsername !== originalUsername) {
+        router.push(`/profile/${encodeURIComponent(trimmedUsername)}`)
       } else {
         router.refresh()
       }
@@ -164,15 +207,31 @@ export function ProfileSettingsModal({ userId, currentUsername, currentAvatarUrl
           {/* 닉네임 */}
           <div>
             <label className="text-xs text-stone-400 tracking-wider uppercase">닉네임</label>
-            <input
-              type="text"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              disabled={saving}
-              maxLength={30}
-              placeholder="2~30자, 영문/숫자/_/-/."
-              className="mt-1 w-full text-sm bg-stone-50 rounded-lg px-4 py-2.5 outline-none focus:ring-1 focus:ring-stone-300 placeholder:text-stone-400 disabled:opacity-60"
-            />
+            <div className="mt-1 flex items-stretch gap-2">
+              <input
+                type="text"
+                value={username}
+                onChange={e => onUsernameChange(e.target.value)}
+                disabled={saving}
+                maxLength={20}
+                placeholder="2~20자, 영문/숫자/_/-/."
+                className="flex-1 text-sm bg-stone-50 rounded-lg px-4 py-2.5 outline-none focus:ring-1 focus:ring-stone-300 placeholder:text-stone-400 disabled:opacity-60"
+              />
+              <button
+                type="button"
+                onClick={checkAvailability}
+                disabled={
+                  saving ||
+                  availability === 'checking' ||
+                  trimmedUsername.length === 0 ||
+                  isUnchanged
+                }
+                className="text-xs tracking-wider text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg px-4 transition-colors disabled:opacity-50 whitespace-nowrap"
+              >
+                {availability === 'checking' ? '확인중' : '중복확인'}
+              </button>
+            </div>
+            <AvailabilityHint status={availability} isUnchanged={isUnchanged} />
           </div>
 
           {error && <p className="text-xs text-rose-500">{error}</p>}
@@ -197,4 +256,18 @@ export function ProfileSettingsModal({ userId, currentUsername, currentAvatarUrl
       </div>
     </div>
   )
+}
+
+function AvailabilityHint({ status, isUnchanged }: { status: Availability; isUnchanged: boolean }) {
+  if (isUnchanged) return null
+  const map: Record<Availability, { text: string; color: string } | null> = {
+    idle: null,
+    checking: { text: '확인 중...', color: 'text-stone-400' },
+    available: { text: '사용가능합니다', color: 'text-emerald-600' },
+    taken: { text: '사용할 수 없습니다', color: 'text-rose-500' },
+    invalid: { text: '영문/숫자/_/-/. 2~20자로 입력해주세요', color: 'text-rose-500' },
+  }
+  const entry = map[status]
+  if (!entry) return null
+  return <p className={`mt-2 text-xs ${entry.color}`}>{entry.text}</p>
 }
