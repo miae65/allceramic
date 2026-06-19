@@ -97,11 +97,41 @@ export type BoardComment = {
   profile?: Profile
 }
 
+export type ExhibitionPost = {
+  id: string
+  user_id: string
+  title: string
+  content: string
+  image_urls: string[]
+  start_date: string | null
+  end_date: string | null
+  location: string | null
+  organizer: string | null
+  view_count: number
+  created_at: string
+  updated_at: string
+  // joined
+  profile?: Profile
+  comment_count?: number
+}
+
+export type ExhibitionComment = {
+  id: string
+  post_id: string
+  user_id: string
+  content: string
+  created_at: string
+  updated_at: string
+  // joined
+  profile?: Profile
+}
+
 export type InfoPost = {
   id: string
   user_id: string
   title: string
   content: string
+  image_urls: string[]
   view_count: number
   created_at: string
   updated_at: string

@@ -51,7 +51,8 @@ export function GNB() {
 
   const navItems = [
     { href: '/jobs', label: '구인·구직', isActive: pathname.startsWith('/jobs') },
-    { href: '/info', label: '정보공유', isActive: pathname.startsWith('/info') },
+    { href: '/info', label: '중고거래', isActive: pathname.startsWith('/info') },
+    { href: '/exhibition', label: '전시정보', isActive: pathname.startsWith('/exhibition') },
     { href: '/board', label: '자유게시판', isActive: pathname.startsWith('/board') },
   ]
 

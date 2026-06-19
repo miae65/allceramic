@@ -19,8 +19,8 @@ export default async function InfoPage() {
     <div className="max-w-3xl mx-auto px-6 py-12">
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="font-serif text-2xl text-stone-900">정보공유</h1>
-          <p className="text-xs text-stone-400 mt-2">세라믹과 관련된 정보를 자유롭게 공유하는 공간입니다.</p>
+          <h1 className="font-serif text-2xl text-stone-900">중고거래</h1>
+          <p className="text-xs text-stone-400 mt-2">세라믹 작품·도구·재료를 거래하는 공간입니다.</p>
         </div>
         <div className="flex items-center gap-3">
           <Link

@@ -14,7 +14,7 @@ type Props = {
   initialImageUrls?: string[]
 }
 
-export function InfoPostForm({
+export function ExhibitionPostForm({
   userId,
   postId,
   initialTitle = '',
@@ -40,20 +40,20 @@ export function InfoPostForm({
       const db = supabase as any
       if (postId) {
         const { error: e } = await db
-          .from('info_posts')
+          .from('exhibition_posts')
           .update({ title: t, content: c, image_urls: imageUrls, updated_at: new Date().toISOString() })
           .eq('id', postId)
         if (e) throw new Error(e.message)
-        router.push(`/info/${postId}`)
+        router.push(`/exhibition/${postId}`)
         router.refresh()
       } else {
         const { data, error: e } = await db
-          .from('info_posts')
+          .from('exhibition_posts')
           .insert({ user_id: userId, title: t, content: c, image_urls: imageUrls })
           .select('id')
           .single()
         if (e) throw new Error(e.message)
-        router.push(`/info/${data.id}`)
+        router.push(`/exhibition/${data.id}`)
         router.refresh()
       }
     } catch (err) {
@@ -70,7 +70,7 @@ export function InfoPostForm({
         onChange={e => setTitle(e.target.value)}
         disabled={saving}
         maxLength={200}
-        placeholder="제목"
+        placeholder="전시명 / 제목"
         className="w-full text-base bg-stone-50 rounded-lg px-4 py-3 outline-none focus:ring-1 focus:ring-stone-300 placeholder:text-stone-400 disabled:opacity-60"
       />
       <textarea
@@ -79,7 +79,7 @@ export function InfoPostForm({
         disabled={saving}
         maxLength={10000}
         rows={12}
-        placeholder="판매하실 작품·도구·재료 정보를 자유롭게 작성해주세요"
+        placeholder="전시 장소, 일정, 작가, 관람 정보 등을 자유롭게 작성해주세요"
         className="w-full text-sm bg-stone-50 rounded-lg px-4 py-3 outline-none focus:ring-1 focus:ring-stone-300 placeholder:text-stone-400 leading-relaxed disabled:opacity-60 resize-none"
       />
       <p className="text-xs text-stone-300 tabular-nums text-right">{content.length} / 10000</p>
@@ -88,18 +88,20 @@ export function InfoPostForm({
         <p className="text-xs text-stone-500 mb-2">사진</p>
         <MultiImageUploader
           userId={userId}
-          pathPrefix="info"
+          pathPrefix="exhibition"
           urls={imageUrls}
           onChange={setImageUrls}
+          maxImages={5}
           disabled={saving}
         />
+        <p className="mt-1 text-xs text-stone-400">첫 번째 사진이 목록의 대표 이미지로 사용됩니다.</p>
       </div>
 
       {error && <p className="text-xs text-rose-500">{error}</p>}
 
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-2 pt-2">
         <Link
-          href={postId ? `/info/${postId}` : '/info'}
+          href={postId ? `/exhibition/${postId}` : '/exhibition'}
           className="text-xs tracking-wider text-stone-500 hover:text-stone-900 rounded-full px-4 py-2 transition-colors"
         >
           취소
