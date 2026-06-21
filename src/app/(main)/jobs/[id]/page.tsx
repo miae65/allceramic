@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { ChevronLeftIcon } from '@/components/ui/icons'
 import { JobCommentSection } from '@/components/jobs/JobCommentSection'
@@ -42,6 +43,20 @@ async function incrementView(id: string) {
 function formatDate(d: string | null) {
   if (!d) return null
   return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const post = await fetchPost(id)
+  if (!post) return { title: '공고를 찾을 수 없습니다' }
+  const label = post.kind === 'hiring' ? '구인' : '구직'
+  const parts = [`[${label}] ${post.position}`, post.region, post.content.slice(0, 80).replace(/\n/g, ' ')].filter(Boolean)
+  const description = parts.join(' · ')
+  return {
+    title: post.title,
+    description,
+    openGraph: { title: `${post.title} | 구인구직`, description, url: `/jobs/${id}` },
+  }
 }
 
 export default async function JobPostDetailPage({ params }: { params: Promise<{ id: string }> }) {

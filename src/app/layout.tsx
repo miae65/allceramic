@@ -16,8 +16,28 @@ const cormorant = Cormorant_Garamond({
 })
 
 export const metadata: Metadata = {
-  title: 'Allceramic',
-  description: 'A curated community for ceramic artists and enthusiasts',
+  metadataBase: new URL('https://allceramic.shop'),
+  title: {
+    default: 'Allceramic',
+    template: '%s | Allceramic',
+  },
+  description: '도예인을 위한 커뮤니티 — 작품, 전시정보, 구인구직을 한 곳에서',
+  keywords: ['도예', '세라믹', '도예 커뮤니티', '도자기', '전시', '구인구직', '도예인', 'Allceramic'],
+  openGraph: {
+    type: 'website',
+    locale: 'ko_KR',
+    url: 'https://allceramic.shop',
+    siteName: 'Allceramic',
+    title: 'Allceramic',
+    description: '도예인을 위한 커뮤니티 — 작품, 전시정보, 구인구직을 한 곳에서',
+    images: [{ url: '/hero.jpg', width: 1200, height: 630, alt: 'Allceramic' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Allceramic',
+    description: '도예인을 위한 커뮤니티 — 작품, 전시정보, 구인구직을 한 곳에서',
+    images: ['/hero.jpg'],
+  },
   other: {
     'naver-site-verification': '91a74ac78462d782ceb21816e7a530b0512196ba',
   },

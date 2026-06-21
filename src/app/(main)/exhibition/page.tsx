@@ -1,8 +1,15 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { exhibitionStatus, formatPeriod, type ExhibitionStatus } from '@/lib/exhibition'
 import type { ExhibitionPost } from '@/types'
+
+export const metadata: Metadata = {
+  title: '전시정보',
+  description: '전국 도예 전시 정보를 한눈에 — 진행중·예정·종료 전시를 확인하세요',
+  openGraph: { title: '전시정보 | Allceramic', description: '전국 도예 전시 정보' },
+}
 
 type ListItem = ExhibitionPost & { exhibition_comments: { count: number }[] }
 

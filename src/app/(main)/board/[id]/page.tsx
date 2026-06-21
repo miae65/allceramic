@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { ChevronLeftIcon } from '@/components/ui/icons'
 import { BoardCommentSection } from '@/components/board/BoardCommentSection'
@@ -36,6 +37,18 @@ async function incrementView(id: string) {
     await (supabase as any).rpc('increment_board_view', { post: id })
   } catch (e) {
     console.error('[increment_board_view]', e)
+  }
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const post = await fetchPost(id)
+  if (!post) return { title: '게시글을 찾을 수 없습니다' }
+  const description = post.content.slice(0, 120).replace(/\n/g, ' ')
+  return {
+    title: post.title,
+    description,
+    openGraph: { title: `${post.title} | 자유게시판`, description, url: `/board/${id}` },
   }
 }
 

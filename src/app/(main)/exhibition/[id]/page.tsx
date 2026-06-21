@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { ChevronLeftIcon } from '@/components/ui/icons'
 import { ExhibitionCommentSection } from '@/components/exhibition/ExhibitionCommentSection'
@@ -38,6 +39,26 @@ async function incrementView(id: string) {
     await (supabase as any).rpc('increment_exhibition_view', { post: id })
   } catch (e) {
     console.error('[increment_exhibition_view]', e)
+  }
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const post = await fetchPost(id)
+  if (!post) return { title: '전시를 찾을 수 없습니다' }
+  const parts = [post.content.slice(0, 100).replace(/\n/g, ' ')]
+  if (post.location) parts.unshift(`📍 ${post.location}`)
+  const description = parts.join(' — ')
+  const ogImage = post.image_urls?.[0]
+  return {
+    title: post.title,
+    description,
+    openGraph: {
+      title: `${post.title} | 전시정보`,
+      description,
+      url: `/exhibition/${id}`,
+      ...(ogImage && { images: [{ url: ogImage, width: 1200, height: 630, alt: post.title }] }),
+    },
   }
 }
 

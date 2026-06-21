@@ -1,6 +1,13 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import type { InfoPost } from '@/types'
+
+export const metadata: Metadata = {
+  title: '정보게시판',
+  description: '도예 관련 정보와 팁을 공유하는 게시판',
+  openGraph: { title: '정보게시판 | Allceramic', description: '도예 관련 정보와 팁을 공유하는 게시판' },
+}
 
 async function fetchInfoPosts() {
   const supabase = await createClient()

@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { FeedGrid } from '@/components/feed/FeedGrid'
@@ -25,6 +26,25 @@ async function fetchProfile(username: string): Promise<{ profile: Profile; posts
   const posts = (postsRaw ?? []) as Post[]
   posts.forEach(p => p.images?.sort((a, b) => a.position - b.position))
   return { profile, posts }
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ username: string }> }): Promise<Metadata> {
+  const { username } = await params
+  const supabase = await createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any).from('profiles').select('bio, avatar_url').eq('username', username).single()
+  const row = data as { bio?: string; avatar_url?: string } | null
+  const description = row?.bio ?? `${username}의 도예 작품 모음`
+  return {
+    title: `${username}의 프로필`,
+    description,
+    openGraph: {
+      title: `${username} | Allceramic`,
+      description,
+      url: `/profile/${username}`,
+      ...(row?.avatar_url && { images: [{ url: row.avatar_url, width: 400, height: 400, alt: username }] }),
+    },
+  }
 }
 
 export default async function ProfilePage({ params }: { params: Promise<{ username: string }> }) {

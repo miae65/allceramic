@@ -1,6 +1,13 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import type { JobPost } from '@/types'
+
+export const metadata: Metadata = {
+  title: '구인구직',
+  description: '도예 공방·브랜드 구인 및 도예인 구직 정보',
+  openGraph: { title: '구인구직 | Allceramic', description: '도예 공방·브랜드 구인 및 도예인 구직 정보' },
+}
 
 type ListItem = JobPost & {
   job_comments: { count: number }[]
