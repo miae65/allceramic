@@ -16,6 +16,9 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   title: 'Allceramic',
   description: 'A curated community for ceramic artists and enthusiasts',
+  other: {
+    'naver-site-verification': '91a74ac78462d782ceb21816e7a530b0512196ba',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
