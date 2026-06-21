@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Cormorant_Garamond, Inter } from 'next/font/google'
+import { GoogleAnalytics } from '@next/third-parties/google'
 import './globals.css'
 
 const inter = Inter({
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko" className={`${inter.variable} ${cormorant.variable} h-full antialiased`}>
       <body className="min-h-full bg-stone-50 text-stone-900">{children}</body>
+      <GoogleAnalytics gaId="G-36Y468BJHH" />
     </html>
   )
 }
