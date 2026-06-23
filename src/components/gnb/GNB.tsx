@@ -10,7 +10,6 @@ import { createClient } from '@/lib/supabase/client'
 import { UploadModal } from '@/components/upload/UploadModal'
 import { UploadBlockedAlert } from '@/components/upload/UploadBlockedAlert'
 import { AuthModal } from '@/components/auth/AuthModal'
-import { InquiryModal } from '@/components/inquiry/InquiryModal'
 import { ProfileSettingsModal } from '@/components/profile/ProfileSettingsModal'
 import { isAdmin } from '@/lib/admin'
 
@@ -18,7 +17,6 @@ export function GNB() {
   const pathname = usePathname()
   const [uploadOpen, setUploadOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
-  const [inquiryOpen, setInquiryOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [blockedAlertOpen, setBlockedAlertOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -98,7 +96,6 @@ export function GNB() {
             <AuthButtons
               onUploadClick={tryOpenUpload}
               onAuthRequired={() => setAuthOpen(true)}
-              onInquiryClick={() => handleProtected(() => setInquiryOpen(true))}
               onSettingsClick={() => handleProtected(() => setSettingsOpen(true))}
             />
             {/* 모바일 햄버거 */}
@@ -147,7 +144,6 @@ export function GNB() {
 
       {uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} />}
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
-      {inquiryOpen && <InquiryModal onClose={() => setInquiryOpen(false)} />}
       {settingsOpen && user && (
         <ProfileSettingsModal userId={user.id} onClose={() => setSettingsOpen(false)} />
       )}
@@ -162,7 +158,6 @@ function ProfileDropdown({
   isAdminUser,
   unreadCount,
   onSignOut,
-  onInquiryClick,
   onSettingsClick,
 }: {
   username: string
@@ -170,7 +165,6 @@ function ProfileDropdown({
   isAdminUser: boolean
   unreadCount: number
   onSignOut: () => void
-  onInquiryClick: () => void
   onSettingsClick: () => void
 }) {
   const [open, setOpen] = useState(false)
@@ -222,19 +216,13 @@ function ProfileDropdown({
             onClick={() => setOpen(false)}
             className="flex items-center justify-between w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
           >
-            <span>내 문의</span>
+            <span>문의</span>
             {unreadCount > 0 && (
               <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-medium flex items-center justify-center tabular-nums">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
           </Link>
-          <button
-            onClick={() => { setOpen(false); onInquiryClick() }}
-            className="w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
-          >
-            문의하기
-          </button>
           {isAdminUser && (
             <Link
               href="/admin"
@@ -265,12 +253,10 @@ function ProfileDropdown({
 function AuthButtons({
   onUploadClick,
   onAuthRequired,
-  onInquiryClick,
   onSettingsClick,
 }: {
   onUploadClick: () => void
   onAuthRequired: () => void
-  onInquiryClick: () => void
   onSettingsClick: () => void
 }) {
   const { user, loading } = useAuth()
@@ -313,7 +299,6 @@ function AuthButtons({
           isAdminUser={isAdmin(user)}
           unreadCount={unreadCount}
           onSignOut={signOut}
-          onInquiryClick={onInquiryClick}
           onSettingsClick={onSettingsClick}
         />
         <button

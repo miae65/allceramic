@@ -1,5 +1,5 @@
 import { HeroSection } from '@/components/feed/HeroSection'
-import { FeedGrid } from '@/components/feed/FeedGrid'
+import { FeedList } from '@/components/feed/FeedList'
 import { NoticeModal } from '@/components/feed/NoticeModal'
 import { createClient } from '@/lib/supabase/server'
 import type { Post, Notice } from '@/types'
@@ -36,7 +36,7 @@ export default async function HomePage() {
   return (
     <div>
       <HeroSection />
-      <FeedGrid posts={posts} columns={4} label="게시물" emptyMessage="아직 게시물이 없습니다" />
+      <FeedList posts={posts} emptyMessage="아직 게시물이 없습니다" />
       <NoticeModal notice={notice} />
     </div>
   )

@@ -126,12 +126,8 @@ export default async function ExhibitionPostDetailPage({ params }: { params: Pro
           </dl>
         )}
 
-        <div className="py-6 text-sm text-stone-700 whitespace-pre-wrap leading-relaxed min-h-[120px]">
-          {post.content}
-        </div>
-
         {post.image_urls && post.image_urls.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 py-6">
             {post.image_urls.map((url, i) => (
               <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="relative aspect-square bg-stone-100 rounded-lg overflow-hidden">
                 <Image src={url} alt={`첨부 이미지 ${i + 1}`} fill sizes="(max-width: 640px) 50vw, 33vw" unoptimized className="object-cover hover:opacity-90 transition-opacity" />
@@ -139,6 +135,10 @@ export default async function ExhibitionPostDetailPage({ params }: { params: Pro
             ))}
           </div>
         )}
+
+        <div className="py-6 text-sm text-stone-700 whitespace-pre-wrap leading-relaxed min-h-[120px]">
+          {post.content}
+        </div>
       </article>
 
       <div className="mt-10">

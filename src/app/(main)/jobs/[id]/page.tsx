@@ -114,7 +114,7 @@ export default async function JobPostDetailPage({ params }: { params: Promise<{ 
           <Meta label={isHiring ? '근무 형태' : '근무 가능 형태'} value={post.work_type} />
           {isHiring && post.salary && <Meta label="급여" value={post.salary} />}
           {isHiring && post.experience_required && <Meta label="경력 조건" value={post.experience_required} />}
-          {isHiring && post.deadline && <Meta label="마감일" value={formatDate(post.deadline)!} />}
+          {isHiring && <Meta label="마감일" value={post.deadline ? formatDate(post.deadline)! : '상시모집'} />}
           {!isHiring && post.experience && <Meta label="경력" value={post.experience} />}
           {!isHiring && post.available_from && <Meta label="가능 시작일" value={formatDate(post.available_from)!} />}
           {!isHiring && post.portfolio_url && (

@@ -36,20 +36,12 @@ export default async function ExhibitionPage() {
           <h1 className="font-serif text-2xl text-stone-900">전시정보</h1>
           <p className="text-xs text-stone-400 mt-2">국내외 세라믹 전시 소식을 공유하는 공간입니다.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/exhibition/my"
-            className="text-xs tracking-[0.15em] uppercase text-stone-500 border border-stone-200 rounded-full px-4 py-2 hover:border-stone-400 hover:text-stone-700 transition-colors"
-          >
-            내가 쓴 글
-          </Link>
-          <Link
-            href="/exhibition/write"
-            className="text-xs tracking-[0.15em] uppercase text-stone-900 border border-stone-300 rounded-full px-4 py-2 hover:border-stone-700 transition-colors"
-          >
-            글쓰기
-          </Link>
-        </div>
+        <Link
+          href="/exhibition/write"
+          className="text-xs tracking-[0.15em] uppercase text-stone-900 border border-stone-300 rounded-full px-4 py-2 hover:border-stone-700 transition-colors"
+        >
+          글쓰기
+        </Link>
       </div>
 
       <div className="mt-10">

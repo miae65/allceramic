@@ -34,6 +34,7 @@ export function JobPostForm({ userId, postId, initial, defaultKind = 'hiring' }:
   const [salary, setSalary] = useState(initial?.salary ?? '')
   const [experienceRequired, setExperienceRequired] = useState(initial?.experience_required ?? '')
   const [deadline, setDeadline] = useState(initial?.deadline ?? '')
+  const [alwaysOpen, setAlwaysOpen] = useState(editing && initial?.deadline === null && initial?.kind === 'hiring')
 
   // 구직
   const [experience, setExperience] = useState(initial?.experience ?? '')
@@ -61,6 +62,10 @@ export function JobPostForm({ userId, postId, initial, defaultKind = 'hiring' }:
       setError('공방/브랜드명을 입력해주세요')
       return
     }
+    if (kind === 'hiring' && !alwaysOpen && !deadline) {
+      setError('마감일을 입력하거나 상시모집을 선택해주세요')
+      return
+    }
     if (kind === 'seeking' && !experience.trim()) {
       setError('경력을 입력해주세요')
       return
@@ -80,7 +85,7 @@ export function JobPostForm({ userId, postId, initial, defaultKind = 'hiring' }:
         company_name: kind === 'hiring' ? companyName.trim() || null : null,
         salary: kind === 'hiring' ? salary.trim() || null : null,
         experience_required: kind === 'hiring' ? experienceRequired.trim() || null : null,
-        deadline: kind === 'hiring' ? deadline || null : null,
+        deadline: kind === 'hiring' ? (alwaysOpen ? null : deadline || null) : null,
         experience: kind === 'seeking' ? experience.trim() || null : null,
         portfolio_url: kind === 'seeking' ? portfolioUrl.trim() || null : null,
         available_from: kind === 'seeking' ? availableFrom || null : null,
@@ -210,14 +215,26 @@ export function JobPostForm({ userId, postId, initial, defaultKind = 'hiring' }:
               />
             </FormField>
           </div>
-          <FormField label="마감일">
+          <FormField label="마감일" required>
             <input
               type="date"
-              value={deadline ?? ''}
+              value={alwaysOpen ? '' : (deadline ?? '')}
               onChange={e => setDeadline(e.target.value)}
-              disabled={saving}
-              className={inputClass}
+              disabled={saving || alwaysOpen}
+              className={`${inputClass} ${alwaysOpen ? 'opacity-40' : ''}`}
             />
+            <button
+              type="button"
+              onClick={() => { setAlwaysOpen(o => !o); setDeadline('') }}
+              disabled={saving}
+              className={`mt-2 text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                alwaysOpen
+                  ? 'bg-stone-900 text-white border-stone-900'
+                  : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400'
+              }`}
+            >
+              상시모집
+            </button>
           </FormField>
         </>
       ) : (

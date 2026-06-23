@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { MarkInquiriesSeenOnMount } from '@/components/inquiry/MarkInquiriesSeenOnMount'
+import { InquiryButton } from '@/components/inquiry/InquiryButton'
 import type { Inquiry } from '@/types'
 
 const STATUS: Record<string, { label: string; cls: string }> = {
@@ -31,7 +32,10 @@ export default async function MyInquiriesPage() {
     <>
       <MarkInquiriesSeenOnMount />
       <div className="max-w-2xl mx-auto px-6 py-10">
-        <h1 className="font-serif text-2xl tracking-wide text-stone-900 mb-1">내 문의</h1>
+        <div className="flex items-end justify-between mb-1">
+          <h1 className="font-serif text-2xl tracking-wide text-stone-900">내 문의</h1>
+          <InquiryButton />
+        </div>
         <p className="text-xs text-stone-400 tracking-wider uppercase mb-8">총 {inquiries.length}건</p>
 
         {inquiries.length === 0 ? (

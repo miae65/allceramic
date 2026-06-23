@@ -24,6 +24,22 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'craftmuseum.seoul.go.kr',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.pacegallery.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.gmocca.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'imagedelivery.net',
+      },
     ],
   },
 }
