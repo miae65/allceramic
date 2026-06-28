@@ -48,7 +48,7 @@ export default async function ExhibitionPage() {
         {posts.length === 0 ? (
           <p className="text-sm text-stone-400 text-center py-20">아직 등록된 전시가 없습니다.</p>
         ) : (
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 auto-rows-fr gap-4">
             {posts.map(post => (
               <ExhibitionCard key={post.id} post={post} />
             ))}
@@ -63,12 +63,12 @@ function ExhibitionCard({ post }: { post: ListItem }) {
   const cover = post.image_urls?.[0] ?? null
   const status = exhibitionStatus(post.start_date, post.end_date)
   return (
-    <li>
+    <li className="h-full">
       <Link
         href={`/exhibition/${post.id}`}
-        className="group block bg-white rounded-xl overflow-hidden border border-stone-100 hover:border-stone-300 hover:shadow-sm transition-all"
+        className="group flex flex-col h-full bg-white rounded-xl overflow-hidden border border-stone-100 hover:border-stone-300 hover:shadow-sm transition-all"
       >
-        <div className="relative aspect-[4/3] bg-stone-100 overflow-hidden">
+        <div className="relative aspect-[5/4] bg-stone-100 overflow-hidden shrink-0">
           {cover ? (
             <Image
               src={cover}
