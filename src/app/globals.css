@@ -9,6 +9,10 @@
   box-sizing: border-box;
 }
 
+body {
+  word-break: keep-all;
+}
+
 /* 3:4 비율 고정 컨테이너 유틸리티 */
 .aspect-3-4 {
   aspect-ratio: 3 / 4;
