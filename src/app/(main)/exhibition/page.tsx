@@ -19,7 +19,7 @@ async function fetchPosts() {
   const { data } = await (supabase as any)
     .from('exhibition_posts')
     .select(
-      'id, title, image_urls, start_date, end_date, location, organizer, view_count, created_at, profile:profiles!exhibition_posts_user_id_fkey(username), exhibition_comments(count)'
+      'id, title, content, image_urls, start_date, end_date, location, organizer, view_count, created_at, profile:profiles!exhibition_posts_user_id_fkey(username), exhibition_comments(count)'
     )
     .order('start_date', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
@@ -62,6 +62,7 @@ export default async function ExhibitionPage() {
 function ExhibitionCard({ post }: { post: ListItem }) {
   const cover = post.image_urls?.[0] ?? null
   const status = exhibitionStatus(post.start_date, post.end_date)
+  const isPermanent = !post.start_date && !post.end_date && /상설전시/.test(post.content ?? '')
   return (
     <li className="h-full">
       <Link
@@ -82,7 +83,13 @@ function ExhibitionCard({ post }: { post: ListItem }) {
             <div className="w-full h-full bg-gradient-to-br from-stone-100 to-stone-200" />
           )}
           <div className="absolute top-3 left-3">
-            <StatusBadge status={status} />
+            {isPermanent ? (
+              <span className="text-[10px] tracking-[0.1em] font-medium px-2 py-1 rounded bg-amber-500/90 text-white backdrop-blur-sm">
+                상설전시
+              </span>
+            ) : (
+              <StatusBadge status={status} />
+            )}
           </div>
         </div>
         <div className="p-4">
@@ -90,7 +97,7 @@ function ExhibitionCard({ post }: { post: ListItem }) {
             {post.title}
           </h3>
           <p className="text-xs text-stone-500 tabular-nums">
-            {formatPeriod(post.start_date, post.end_date)}
+            {isPermanent ? '상설전시' : formatPeriod(post.start_date, post.end_date)}
           </p>
           {post.location && (
             <p className="text-xs text-stone-400 mt-1 truncate">📍 {post.location}</p>
