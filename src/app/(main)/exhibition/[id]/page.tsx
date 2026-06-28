@@ -68,6 +68,8 @@ export default async function ExhibitionPostDetailPage({ params }: { params: Pro
   const post = await fetchPost(id)
   if (!post) notFound()
 
+  const isPermanent = !post.start_date && !post.end_date && /상설전시/.test(post.content ?? '')
+
   await incrementView(id)
   const comments = await fetchComments(id)
 
@@ -108,9 +110,18 @@ export default async function ExhibitionPostDetailPage({ params }: { params: Pro
         </div>
 
         {/* 메타 정보 */}
-        {(post.start_date || post.location || post.organizer) && (
+        {(isPermanent || post.start_date || post.location || post.organizer) && (
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 py-6 border-b border-stone-100 text-sm">
-            {(post.start_date || post.end_date) && (
+            {isPermanent ? (
+              <Meta
+                label="전시 기간"
+                value={
+                  <span className="text-[10px] tracking-[0.1em] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700">
+                    상설전시
+                  </span>
+                }
+              />
+            ) : (post.start_date || post.end_date) && (
               <Meta
                 label="전시 기간"
                 value={
