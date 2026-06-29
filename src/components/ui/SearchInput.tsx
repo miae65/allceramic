@@ -30,7 +30,7 @@ export function SearchInput({ placeholder = '검색' }: { placeholder?: string }
   const currentQ = searchParams.get('q') ?? ''
 
   return (
-    <form onSubmit={handleSubmit} className="relative flex items-center">
+    <form onSubmit={handleSubmit} className="relative inline-flex items-center">
       <input
         ref={inputRef}
         type="text"
