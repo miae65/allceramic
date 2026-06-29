@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { SearchInput } from '@/components/ui/SearchInput'
 import { Pagination } from '@/components/ui/Pagination'
+import { AuthGatedLink } from '@/components/ui/AuthGatedLink'
 import type { BoardPost } from '@/types'
 
 export const metadata: Metadata = {
@@ -38,6 +39,7 @@ export default async function BoardPage({
   const page = Math.max(1, parseInt(pageStr ?? '1', 10) || 1)
   const { posts, total } = await fetchBoardPosts(q, page)
   const totalPages = Math.ceil(total / PAGE_SIZE)
+  const { data: { user } } = await (await createClient()).auth.getUser()
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
@@ -53,18 +55,20 @@ export default async function BoardPage({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            href="/board/my"
-            className="text-xs tracking-[0.15em] uppercase text-stone-500 border border-stone-200 rounded-full px-4 py-2 hover:border-stone-400 hover:text-stone-700 transition-colors"
-          >
-            내가 쓴 글
-          </Link>
-          <Link
+          {user && (
+            <Link
+              href="/board/my"
+              className="text-xs tracking-[0.15em] uppercase text-stone-500 border border-stone-200 rounded-full px-4 py-2 hover:border-stone-400 hover:text-stone-700 transition-colors"
+            >
+              내가 쓴 글
+            </Link>
+          )}
+          <AuthGatedLink
             href="/board/write"
             className="text-xs tracking-[0.15em] uppercase text-stone-900 border border-stone-300 rounded-full px-4 py-2 hover:border-stone-700 transition-colors"
           >
             글쓰기
-          </Link>
+          </AuthGatedLink>
         </div>
       </div>
 

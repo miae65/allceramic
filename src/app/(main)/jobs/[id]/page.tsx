@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: post.title,
     description,
-    openGraph: { title: `${post.title} | 구인구직`, description, url: `/jobs/${id}` },
+    openGraph: { title: `${post.title} | 구인/구직`, description, url: `/jobs/${id}` },
   }
 }
 

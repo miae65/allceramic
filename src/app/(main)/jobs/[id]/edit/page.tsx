@@ -21,7 +21,7 @@ export default async function JobEditPage({ params }: { params: Promise<{ id: st
   return (
     <div className="max-w-2xl mx-auto px-6 py-12">
       <p className="text-xs tracking-widest text-stone-400 uppercase mb-2">Community</p>
-      <h1 className="font-serif text-2xl text-stone-900 mb-8">구인·구직 수정</h1>
+      <h1 className="font-serif text-2xl text-stone-900 mb-8">구인/구직 수정</h1>
       <JobPostForm userId={user.id} postId={(post as JobPost).id} initial={post as JobPost} />
     </div>
   )

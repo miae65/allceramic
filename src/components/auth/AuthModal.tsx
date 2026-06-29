@@ -58,7 +58,7 @@ export function AuthModal({ onClose }: Props) {
           </p>
 
           <p className="text-sm text-stone-500 leading-relaxed mb-8">
-            작가를 저장하려면 로그인이 필요합니다.
+            환영합니다.
           </p>
 
           {/* Google 로그인 버튼 */}

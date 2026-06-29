@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { SearchInput } from '@/components/ui/SearchInput'
 import { Pagination } from '@/components/ui/Pagination'
 import { AuthGatedLink } from '@/components/ui/AuthGatedLink'
+import { InfoWriteButton } from '@/components/info/InfoWriteButton'
 import type { InfoPost } from '@/types'
 
 export const metadata: Metadata = {
@@ -39,13 +40,14 @@ export default async function InfoPage({
   const page = Math.max(1, parseInt(pageStr ?? '1', 10) || 1)
   const { posts, total } = await fetchInfoPosts(q, page)
   const totalPages = Math.ceil(total / PAGE_SIZE)
+  const { data: { user } } = await (await createClient()).auth.getUser()
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
       <div className="flex items-end justify-between flex-wrap gap-4">
         <div>
           <h1 className="font-serif text-2xl text-stone-900">중고거래</h1>
-          <p className="text-xs text-stone-400 mt-2">세라믹 작품·도구·재료를 거래하는 공간입니다.</p>
+          <p className="text-xs text-stone-400 mt-2">세라믹 도구·재료를 거래하는 공간입니다.</p>
           <div className="mt-4">
             <Suspense>
               <SearchInput placeholder="제목 검색" />
@@ -53,18 +55,15 @@ export default async function InfoPage({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            href="/info/my"
-            className="text-xs tracking-[0.15em] uppercase text-stone-500 border border-stone-200 rounded-full px-4 py-2 hover:border-stone-400 hover:text-stone-700 transition-colors"
-          >
-            내가 쓴 글
-          </Link>
-          <Link
-            href="/info/write"
-            className="text-xs tracking-[0.15em] uppercase text-stone-900 border border-stone-300 rounded-full px-4 py-2 hover:border-stone-700 transition-colors"
-          >
-            글쓰기
-          </Link>
+          {user && (
+            <Link
+              href="/info/my"
+              className="text-xs tracking-[0.15em] uppercase text-stone-500 border border-stone-200 rounded-full px-4 py-2 hover:border-stone-400 hover:text-stone-700 transition-colors"
+            >
+              내가 쓴 글
+            </Link>
+          )}
+          <InfoWriteButton className="text-xs tracking-[0.15em] uppercase text-stone-900 border border-stone-300 rounded-full px-4 py-2 hover:border-stone-700 transition-colors" />
         </div>
       </div>
 

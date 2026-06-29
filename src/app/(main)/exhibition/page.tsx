@@ -3,6 +3,7 @@ import Image from 'next/image'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { exhibitionStatus, formatPeriod, type ExhibitionStatus } from '@/lib/exhibition'
+import { AuthGatedLink } from '@/components/ui/AuthGatedLink'
 import type { ExhibitionPost } from '@/types'
 
 export const metadata: Metadata = {
@@ -42,12 +43,12 @@ export default async function ExhibitionPage() {
           <h1 className="font-serif text-2xl text-stone-900">전시정보</h1>
           <p className="text-xs text-stone-400 mt-2">국내외 세라믹 전시 소식을 공유하는 공간입니다.</p>
         </div>
-        <Link
+        <AuthGatedLink
           href="/exhibition/write"
           className="text-xs tracking-[0.15em] uppercase text-stone-900 border border-stone-300 rounded-full px-4 py-2 hover:border-stone-700 transition-colors"
         >
           글쓰기
-        </Link>
+        </AuthGatedLink>
       </div>
 
       <div className="mt-10">

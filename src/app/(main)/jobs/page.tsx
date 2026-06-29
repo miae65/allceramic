@@ -8,9 +8,9 @@ import { AuthGatedLink } from '@/components/ui/AuthGatedLink'
 import type { JobPost } from '@/types'
 
 export const metadata: Metadata = {
-  title: '구인구직',
+  title: '구인/구직',
   description: '도예 공방·브랜드 구인 및 도예인 구직 정보',
-  openGraph: { title: '구인구직 | Allceramic', description: '도예 공방·브랜드 구인 및 도예인 구직 정보' },
+  openGraph: { title: '구인/구직 | Allceramic', description: '도예 공방·브랜드 구인 및 도예인 구직 정보' },
 }
 
 const PAGE_SIZE = 15
@@ -44,6 +44,7 @@ export default async function JobsPage({
   const page = Math.max(1, parseInt(pageStr ?? '1', 10) || 1)
   const { posts, total } = await fetchJobs(q, page)
   const totalPages = Math.ceil(total / PAGE_SIZE)
+  const { data: { user } } = await (await createClient()).auth.getUser()
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
@@ -58,18 +59,20 @@ export default async function JobsPage({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            href="/jobs/my"
-            className="text-xs tracking-[0.15em] uppercase text-stone-500 border border-stone-200 rounded-full px-4 py-2 hover:border-stone-400 hover:text-stone-700 transition-colors"
-          >
-            내가 쓴 글
-          </Link>
-          <Link
+          {user && (
+            <Link
+              href="/jobs/my"
+              className="text-xs tracking-[0.15em] uppercase text-stone-500 border border-stone-200 rounded-full px-4 py-2 hover:border-stone-400 hover:text-stone-700 transition-colors"
+            >
+              내가 쓴 글
+            </Link>
+          )}
+          <AuthGatedLink
             href="/jobs/write"
             className="text-xs tracking-[0.15em] uppercase text-stone-900 border border-stone-300 rounded-full px-4 py-2 hover:border-stone-700 transition-colors"
           >
             글쓰기
-          </Link>
+          </AuthGatedLink>
         </div>
       </div>
 
