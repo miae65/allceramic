@@ -109,50 +109,50 @@ export function GNB() {
               />
             </div>
             {/* 모바일 햄버거 */}
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(o => !o)}
-              aria-label={mobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
-              aria-expanded={mobileMenuOpen}
-              className="md:hidden text-stone-500 hover:text-stone-900 transition-colors"
-            >
-              {mobileMenuOpen ? (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                  <path d="M6 6l12 12M18 6L6 18" />
-                </svg>
-              ) : (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                  <path d="M4 7h16M4 12h16M4 17h16" />
-                </svg>
+            <div className="relative md:hidden h-7 flex items-center">
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(o => !o)}
+                aria-label={mobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
+                aria-expanded={mobileMenuOpen}
+                className="text-stone-500 hover:text-stone-900 transition-colors"
+              >
+                {mobileMenuOpen ? (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                ) : (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                    <path d="M4 7h16M4 12h16M4 17h16" />
+                  </svg>
+                )}
+              </button>
+              {mobileMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden z-50">
+                  {navItems.map(item => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`block px-4 py-[9px] text-sm transition-colors ${
+                        item.isActive
+                          ? 'text-stone-900 bg-stone-50'
+                          : 'text-stone-600 hover:bg-stone-50'
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
               )}
-            </button>
+            </div>
           </div>
         </nav>
 
-        {/* 모바일 메뉴 패널 */}
         {mobileMenuOpen && (
-          <>
-            {/* 바깥 클릭 시 닫기 */}
-            <div
-              className="md:hidden fixed inset-0 top-16 z-0"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-            <div className="md:hidden absolute top-[4.5rem] right-4 w-44 bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden z-10">
-              {navItems.map(item => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`block px-4 py-3 text-sm transition-colors ${
-                    item.isActive
-                      ? 'text-stone-900 bg-stone-50'
-                      : 'text-stone-600 hover:bg-stone-50'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </>
+          <div
+            className="md:hidden fixed inset-0 top-16 z-40"
+            onClick={() => setMobileMenuOpen(false)}
+          />
         )}
       </header>
 
@@ -217,18 +217,18 @@ function ProfileDropdown({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-10 w-44 bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden z-50">
+        <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden z-50">
           <Link
             href="/profile/me"
             onClick={() => setOpen(false)}
-            className="block w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
+            className="block w-full text-left px-4 py-[9px] text-sm text-stone-600 hover:bg-stone-50 transition-colors"
           >
             마이페이지
           </Link>
           <Link
             href="/inquiries/me"
             onClick={() => setOpen(false)}
-            className="flex items-center justify-between w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
+            className="flex items-center justify-between w-full text-left px-4 py-[9px] text-sm text-stone-600 hover:bg-stone-50 transition-colors"
           >
             <span>문의</span>
             {unreadCount > 0 && (
@@ -241,20 +241,20 @@ function ProfileDropdown({
             <Link
               href="/admin"
               onClick={() => setOpen(false)}
-              className="block w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
+              className="block w-full text-left px-4 py-[9px] text-sm text-stone-600 hover:bg-stone-50 transition-colors"
             >
               관리자
             </Link>
           )}
           <button
             onClick={() => { setOpen(false); onSettingsClick() }}
-            className="w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
+            className="w-full text-left px-4 py-[9px] text-sm text-stone-600 hover:bg-stone-50 transition-colors"
           >
             설정
           </button>
           <button
             onClick={() => { setOpen(false); onSignOut() }}
-            className="w-full text-left px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors border-t border-stone-100"
+            className="w-full text-left px-4 py-[9px] text-sm text-stone-600 hover:bg-stone-50 transition-colors border-t border-stone-100"
           >
             로그아웃
           </button>
@@ -327,17 +327,8 @@ function AuthButtons({
   }
 
   return (
-    <>
-      <button
-        onClick={onUploadClick}
-        aria-label="게시물 업로드"
-        className="text-stone-500 hover:text-stone-900 transition-colors"
-      >
-        <PlusIcon className="w-5 h-5" />
-      </button>
-      <button onClick={onAuthRequired} className="hover:text-stone-900 transition-colors">
-        로그인
-      </button>
-    </>
+    <button onClick={onAuthRequired} className="hover:text-stone-900 transition-colors">
+      로그인
+    </button>
   )
 }

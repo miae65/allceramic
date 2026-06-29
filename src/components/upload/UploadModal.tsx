@@ -10,34 +10,24 @@ import { getCroppedImg } from '@/lib/utils/cropImage'
 import { createClient } from '@/lib/supabase/client'
 
 type Step = 'select' | 'crop' | 'caption' | 'submitting'
-type Mode = 'image' | 'video'
 
 type Props = {
   onClose: () => void
 }
 
-const MAX_VIDEO_SIZE = 100 * 1024 * 1024 // 100MB
-
 export function UploadModal({ onClose }: Props) {
   const router = useRouter()
   const [step, setStep] = useState<Step>('select')
-  const [mode, setMode] = useState<Mode>('image')
 
-  // 이미지
   const [rawUrls, setRawUrls] = useState<string[]>([])
   const [cropIndex, setCropIndex] = useState(0)
   const [croppedBlobs, setCroppedBlobs] = useState<Blob[]>([])
   const [croppedUrls, setCroppedUrls] = useState<string[]>([])
 
-  // 영상
-  const [videoFile, setVideoFile] = useState<File | null>(null)
-  const [videoUrl, setVideoUrl] = useState<string | null>(null)
-
   const [caption, setCaption] = useState('')
   const [dragging, setDragging] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
-  const videoInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -49,30 +39,18 @@ export function UploadModal({ onClose }: Props) {
     return () => {
       rawUrls.forEach(URL.revokeObjectURL)
       croppedUrls.forEach(URL.revokeObjectURL)
-      if (videoUrl) URL.revokeObjectURL(videoUrl)
     }
-  }, [rawUrls, croppedUrls, videoUrl])
+  }, [rawUrls, croppedUrls])
 
   const loadImages = (files: FileList | File[]) => {
     const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/')).slice(0, 5)
     if (!imageFiles.length) return
     const urls = imageFiles.map(f => URL.createObjectURL(f))
-    setMode('image')
     setRawUrls(urls)
     setCropIndex(0)
     setCroppedBlobs([])
     setCroppedUrls([])
     setStep('crop')
-  }
-
-  const loadVideo = (file: File) => {
-    if (!file.type.startsWith('video/')) { setError('영상 파일을 선택해주세요'); return }
-    if (file.size > MAX_VIDEO_SIZE) { setError('영상은 최대 100MB까지 업로드할 수 있어요'); return }
-    setError(null)
-    setMode('video')
-    setVideoFile(file)
-    setVideoUrl(URL.createObjectURL(file))
-    setStep('caption')
   }
 
   const onCropDone = useCallback(async (pixels: Area) => {
@@ -110,53 +88,28 @@ export function UploadModal({ onClose }: Props) {
 
       if (!profile) throw new Error('프로필을 찾을 수 없습니다')
 
-      if (mode === 'video') {
-        if (!videoFile) throw new Error('영상 파일이 없습니다')
+      const { data: post, error: postError } = await db
+        .from('posts')
+        .insert({ user_id: user.id, caption: caption.trim() || null })
+        .select('id')
+        .single()
+      if (postError || !post) throw new Error('게시물 생성 실패')
 
-        const { data: post, error: postError } = await db
-          .from('posts')
-          .insert({ user_id: user.id, caption: caption.trim() || null })
-          .select('id')
-          .single()
-        if (postError || !post) throw new Error('게시물 생성 실패')
-
-        const ext = videoFile.name.split('.').pop()?.toLowerCase() || 'mp4'
-        const path = `${user.id}/${post.id}.${ext}`
-        const { error: upErr } = await supabase.storage
-          .from('post-videos')
-          .upload(path, videoFile, { contentType: videoFile.type, upsert: false })
-        if (upErr) throw new Error(`영상 업로드 실패: ${upErr.message}`)
-
-        const { data: { publicUrl } } = supabase.storage.from('post-videos').getPublicUrl(path)
-        const { error: updateErr } = await db
-          .from('posts')
-          .update({ video_url: publicUrl })
-          .eq('id', post.id)
-        if (updateErr) throw new Error(updateErr.message)
-      } else {
-        const { data: post, error: postError } = await db
-          .from('posts')
-          .insert({ user_id: user.id, caption: caption.trim() || null })
-          .select('id')
-          .single()
-        if (postError || !post) throw new Error('게시물 생성 실패')
-
-        const imageUrls: string[] = []
-        for (let i = 0; i < croppedBlobs.length; i++) {
-          const blob = croppedBlobs[i]
-          const path = `${user.id}/${post.id}/${i}.jpg`
-          const { error: uploadError } = await supabase.storage
-            .from('post-images')
-            .upload(path, blob, { contentType: 'image/jpeg', upsert: true })
-          if (uploadError) throw new Error(`이미지 업로드 실패: ${uploadError.message}`)
-          const { data: { publicUrl } } = supabase.storage.from('post-images').getPublicUrl(path)
-          imageUrls.push(publicUrl)
-        }
-
-        await db.from('post_images').insert(
-          imageUrls.map((url: string, position: number) => ({ post_id: post.id, url, position }))
-        )
+      const imageUrls: string[] = []
+      for (let i = 0; i < croppedBlobs.length; i++) {
+        const blob = croppedBlobs[i]
+        const path = `${user.id}/${post.id}/${i}.jpg`
+        const { error: uploadError } = await supabase.storage
+          .from('post-images')
+          .upload(path, blob, { contentType: 'image/jpeg', upsert: true })
+        if (uploadError) throw new Error(`이미지 업로드 실패: ${uploadError.message}`)
+        const { data: { publicUrl } } = supabase.storage.from('post-images').getPublicUrl(path)
+        imageUrls.push(publicUrl)
       }
+
+      await db.from('post_images').insert(
+        imageUrls.map((url: string, position: number) => ({ post_id: post.id, url, position }))
+      )
 
       onClose()
       router.push(`/profile/${profile.username}`)
@@ -198,10 +151,7 @@ export function UploadModal({ onClose }: Props) {
               onDrop={e => {
                 e.preventDefault()
                 setDragging(false)
-                const files = Array.from(e.dataTransfer.files)
-                const hasVideo = files.find(f => f.type.startsWith('video/'))
-                if (hasVideo) loadVideo(hasVideo)
-                else loadImages(e.dataTransfer.files)
+                loadImages(e.dataTransfer.files)
               }}
             >
               <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center">
@@ -215,20 +165,12 @@ export function UploadModal({ onClose }: Props) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => imageInputRef.current?.click()}
-                className="text-xs tracking-wider text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-full py-2.5 transition-colors"
-              >
-                이미지 선택
-              </button>
-              <button
-                onClick={() => videoInputRef.current?.click()}
-                className="text-xs tracking-wider text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-full py-2.5 transition-colors"
-              >
-                영상 업로드 (최대 100MB)
-              </button>
-            </div>
+            <button
+              onClick={() => imageInputRef.current?.click()}
+              className="w-full text-xs tracking-wider text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-full py-2.5 transition-colors"
+            >
+              이미지 선택
+            </button>
 
             {error && <p className="text-xs text-rose-500">{error}</p>}
 
@@ -239,13 +181,6 @@ export function UploadModal({ onClose }: Props) {
               multiple
               className="hidden"
               onChange={e => e.target.files && loadImages(e.target.files)}
-            />
-            <input
-              ref={videoInputRef}
-              type="file"
-              accept="video/*"
-              className="hidden"
-              onChange={e => e.target.files?.[0] && loadVideo(e.target.files[0])}
             />
           </div>
         )}
@@ -265,19 +200,11 @@ export function UploadModal({ onClose }: Props) {
         {step === 'caption' && (
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex gap-2 p-4 overflow-x-auto flex-shrink-0 border-b border-stone-100">
-              {mode === 'image' && croppedUrls.map((url, i) => (
+              {croppedUrls.map((url, i) => (
                 <div key={i} className="w-20 flex-shrink-0 relative overflow-hidden rounded-md bg-stone-200" style={{ height: '106px' }}>
                   <Image src={url} alt="" fill className="object-cover" />
                 </div>
               ))}
-              {mode === 'video' && videoUrl && (
-                <video
-                  src={videoUrl}
-                  controls
-                  className="w-32 h-[106px] flex-shrink-0 rounded-md bg-stone-900 object-cover"
-                  preload="metadata"
-                />
-              )}
             </div>
 
             <div className="flex-1 p-4">
@@ -310,9 +237,7 @@ export function UploadModal({ onClose }: Props) {
           <div className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center gap-3">
               <div className="w-8 h-8 border-2 border-stone-200 border-t-stone-900 rounded-full animate-spin" />
-              <p className="text-xs text-stone-400 tracking-widest uppercase">
-                {mode === 'video' ? 'Uploading Video' : 'Posting'}
-              </p>
+              <p className="text-xs text-stone-400 tracking-widest uppercase">Posting</p>
             </div>
           </div>
         )}
