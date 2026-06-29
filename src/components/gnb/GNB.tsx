@@ -89,16 +89,18 @@ export function GNB() {
 
           {/* 우측 */}
           <div className="flex items-center gap-3 text-sm text-stone-600">
-            <Link
-              href="/favorites"
-              aria-label="즐겨찾기"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`text-stone-500 hover:text-stone-900 transition-colors ${
-                pathname === '/favorites' ? 'text-stone-900' : ''
-              }`}
-            >
-              <BookmarkIcon className="w-5 h-5" />
-            </Link>
+            {user && (
+              <Link
+                href="/favorites"
+                aria-label="즐겨찾기"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`text-stone-500 hover:text-stone-900 transition-colors ${
+                  pathname === '/favorites' ? 'text-stone-900' : ''
+                }`}
+              >
+                <BookmarkIcon className="w-5 h-5" />
+              </Link>
+            )}
             <div className="contents" onClick={() => setMobileMenuOpen(false)}>
               <AuthButtons
                 onUploadClick={tryOpenUpload}
@@ -326,13 +328,6 @@ function AuthButtons({
 
   return (
     <>
-      <button
-        onClick={onAuthRequired}
-        aria-label="마이페이지"
-        className="text-stone-500 hover:text-stone-900 transition-colors"
-      >
-        <UserIcon className="w-5 h-5" />
-      </button>
       <button
         onClick={onUploadClick}
         aria-label="게시물 업로드"

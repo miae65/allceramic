@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { SearchInput } from '@/components/ui/SearchInput'
 import { Pagination } from '@/components/ui/Pagination'
+import { AuthGatedLink } from '@/components/ui/AuthGatedLink'
 import type { InfoPost } from '@/types'
 
 export const metadata: Metadata = {
@@ -89,7 +90,7 @@ export default async function InfoPage({
             {posts.map((post, i) => {
               const commentCount = post.info_comments?.[0]?.count ?? 0
               return (
-                <Link
+                <AuthGatedLink
                   key={post.id}
                   href={`/info/${post.id}`}
                   className="flex items-center justify-between py-4 group hover:bg-stone-50 -mx-3 px-3 rounded transition-colors"
@@ -110,7 +111,7 @@ export default async function InfoPage({
                     </span>
                     <span className="text-xs text-stone-300 hidden sm:block w-12 text-right tabular-nums">{post.view_count}</span>
                   </div>
-                </Link>
+                </AuthGatedLink>
               )
             })}
           </div>

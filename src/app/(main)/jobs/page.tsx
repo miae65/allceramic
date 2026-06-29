@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { SearchInput } from '@/components/ui/SearchInput'
 import { Pagination } from '@/components/ui/Pagination'
+import { AuthGatedLink } from '@/components/ui/AuthGatedLink'
 import type { JobPost } from '@/types'
 
 export const metadata: Metadata = {
@@ -93,7 +94,7 @@ export default async function JobsPage({
         ) : (
           <div className="divide-y divide-stone-100">
             {posts.map((post, i) => (
-              <Link
+              <AuthGatedLink
                 key={post.id}
                 href={`/jobs/${post.id}`}
                 className="flex items-center justify-between py-4 group hover:bg-stone-50 -mx-3 px-3 rounded transition-colors"
@@ -114,7 +115,7 @@ export default async function JobsPage({
                   </span>
                   <span className="text-xs text-stone-500 hidden sm:block w-12 text-right tabular-nums">{post.view_count}</span>
                 </div>
-              </Link>
+              </AuthGatedLink>
             ))}
           </div>
         )}
