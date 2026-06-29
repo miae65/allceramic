@@ -13,6 +13,8 @@ export const metadata: Metadata = {
 
 type ListItem = ExhibitionPost & { exhibition_comments: { count: number }[] }
 
+const STATUS_ORDER = { ongoing: 0, unknown: 0, upcoming: 1, ended: 2 } as const
+
 async function fetchPosts() {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -23,7 +25,11 @@ async function fetchPosts() {
     )
     .order('start_date', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
-  return (data ?? []) as ListItem[]
+  const posts = (data ?? []) as ListItem[]
+  return posts.sort((a, b) =>
+    STATUS_ORDER[exhibitionStatus(a.start_date, a.end_date)] -
+    STATUS_ORDER[exhibitionStatus(b.start_date, b.end_date)]
+  )
 }
 
 export default async function ExhibitionPage() {
