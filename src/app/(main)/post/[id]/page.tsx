@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { PostViewer } from '@/components/post/PostViewer'
 import { PostActions } from '@/components/post/PostActions'
 import { CommentSection } from '@/components/post/CommentSection'
-import { DeletePostButton } from '@/components/post/DeletePostButton'
+import { PostOwnerActions } from '@/components/post/PostOwnerActions'
 import { ChevronLeftIcon } from '@/components/ui/icons'
 import { createClient } from '@/lib/supabase/server'
 import type { Post, Comment } from '@/types'
@@ -129,11 +129,21 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
             </div>
           </div>
 
-          {/* 캡션 */}
-          {post.caption && (
-            <p className="font-serif text-stone-700 text-[1.05rem] leading-relaxed mb-3">
-              {post.caption}
-            </p>
+          {/* 캡션 + 본인 수정/삭제 (인라인) */}
+          {isOwn ? (
+            <PostOwnerActions
+              postId={post.id}
+              ownerId={post.user_id}
+              imagePaths={imagePaths}
+              redirectTo={redirectTo}
+              initialCaption={post.caption}
+            />
+          ) : (
+            post.caption && (
+              <p className="font-serif text-stone-700 text-[1.05rem] leading-relaxed mb-3">
+                {post.caption}
+              </p>
+            )
           )}
 
           {/* 날짜 */}
@@ -145,24 +155,6 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
 
           {/* 좋아요 / 공유 */}
           <PostActions likeCount={post.like_count} postId={post.id} isLiked={isLiked} />
-
-          {/* 본인 글 수정/삭제 */}
-          {isOwn && (
-            <div className="flex items-center gap-1">
-              <Link
-                href={`/post/${post.id}/edit`}
-                className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-700 transition-colors py-3 pr-3"
-              >
-                수정
-              </Link>
-              <DeletePostButton
-                postId={post.id}
-                ownerId={post.user_id}
-                imagePaths={imagePaths}
-                redirectTo={redirectTo}
-              />
-            </div>
-          )}
 
           {/* 댓글 */}
           <CommentSection postId={post.id} initialComments={comments} />
