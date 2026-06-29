@@ -37,11 +37,13 @@ export default async function InfoPage({
         <div>
           <h1 className="font-serif text-2xl text-stone-900">중고거래</h1>
           <p className="text-xs text-stone-400 mt-2">세라믹 작품·도구·재료를 거래하는 공간입니다.</p>
+          <div className="mt-4">
+            <Suspense>
+              <SearchInput placeholder="제목 검색" />
+            </Suspense>
+          </div>
         </div>
         <div className="flex items-center gap-3">
-          <Suspense>
-            <SearchInput placeholder="제목 검색" />
-          </Suspense>
           <Link
             href="/info/my"
             className="text-xs tracking-[0.15em] uppercase text-stone-500 border border-stone-200 rounded-full px-4 py-2 hover:border-stone-400 hover:text-stone-700 transition-colors"
