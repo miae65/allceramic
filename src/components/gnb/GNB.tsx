@@ -22,6 +22,11 @@ export function GNB() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { user } = useAuth()
 
+  // 라우트 변경 시 메뉴 닫기
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [pathname])
+
   const handleProtected = (action: () => void) => {
     if (!user) { setAuthOpen(true); return }
     action()
@@ -121,24 +126,30 @@ export function GNB() {
 
         {/* 모바일 메뉴 패널 */}
         {mobileMenuOpen && (
-          <div className="md:hidden absolute top-16 left-0 right-0 bg-white border-b border-stone-100 shadow-sm">
-            <div className="flex flex-col py-2">
-              {navItems.map(item => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`px-6 py-3 text-sm transition-colors ${
-                    item.isActive
-                      ? 'text-stone-900 font-medium bg-stone-50'
-                      : 'text-stone-600 hover:bg-stone-50'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
+          <>
+            {/* 바깥 클릭 시 닫기 */}
+            <div
+              className="md:hidden fixed inset-0 top-16 z-0"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <div className="md:hidden absolute top-16 left-0 right-0 bg-white border-b border-stone-100 shadow-sm z-10">
+              <div className="flex flex-col py-2">
+                {navItems.map(item => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`px-6 py-3 text-sm transition-colors ${
+                      item.isActive
+                        ? 'text-stone-900 font-medium bg-stone-50'
+                        : 'text-stone-600 hover:bg-stone-50'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
+          </>
         )}
       </header>
 
