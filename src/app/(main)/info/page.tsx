@@ -1,6 +1,8 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { SearchInput } from '@/components/ui/SearchInput'
 import type { InfoPost } from '@/types'
 
 export const metadata: Metadata = {
@@ -9,27 +11,37 @@ export const metadata: Metadata = {
   openGraph: { title: '정보게시판 | Allceramic', description: '도예 관련 정보와 팁을 공유하는 게시판' },
 }
 
-async function fetchInfoPosts() {
+async function fetchInfoPosts(q?: string) {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (supabase as any)
+  let query = (supabase as any)
     .from('info_posts')
     .select('id, title, view_count, created_at, profile:profiles!info_posts_user_id_fkey(username), info_comments(count)')
     .order('created_at', { ascending: false })
+  if (q) query = query.ilike('title', `%${q}%`)
+  const { data } = await query
   return (data ?? []) as Array<InfoPost & { info_comments: { count: number }[] }>
 }
 
-export default async function InfoPage() {
-  const posts = await fetchInfoPosts()
+export default async function InfoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
+  const { q } = await searchParams
+  const posts = await fetchInfoPosts(q)
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
-      <div className="flex items-end justify-between">
+      <div className="flex items-end justify-between flex-wrap gap-4">
         <div>
           <h1 className="font-serif text-2xl text-stone-900">중고거래</h1>
           <p className="text-xs text-stone-400 mt-2">세라믹 작품·도구·재료를 거래하는 공간입니다.</p>
         </div>
         <div className="flex items-center gap-3">
+          <Suspense>
+            <SearchInput placeholder="제목 검색" />
+          </Suspense>
           <Link
             href="/info/my"
             className="text-xs tracking-[0.15em] uppercase text-stone-500 border border-stone-200 rounded-full px-4 py-2 hover:border-stone-400 hover:text-stone-700 transition-colors"
@@ -45,7 +57,7 @@ export default async function InfoPage() {
         </div>
       </div>
 
-      <div className="mt-[100px]">
+      <div className="mt-10">
         <div className="flex items-center justify-between py-3 px-3 -mx-3 border-y border-stone-200 bg-stone-50/50 text-xs tracking-wider text-stone-500 uppercase">
           <div className="flex items-center gap-4 min-w-0">
             <span className="w-5 shrink-0" />
@@ -59,7 +71,9 @@ export default async function InfoPage() {
         </div>
 
         {posts.length === 0 ? (
-          <p className="text-sm text-stone-400 text-center py-20">아직 게시글이 없습니다.</p>
+          <p className="text-sm text-stone-400 text-center py-20">
+            {q ? `"${q}" 검색 결과가 없습니다.` : '아직 게시글이 없습니다.'}
+          </p>
         ) : (
           <div className="divide-y divide-stone-100">
             {posts.map((post, i) => {

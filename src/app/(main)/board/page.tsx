@@ -1,6 +1,8 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { SearchInput } from '@/components/ui/SearchInput'
 import type { BoardPost } from '@/types'
 
 export const metadata: Metadata = {
@@ -9,27 +11,37 @@ export const metadata: Metadata = {
   openGraph: { title: '자유게시판 | Allceramic', description: '도예 커뮤니티 자유게시판' },
 }
 
-async function fetchBoardPosts() {
+async function fetchBoardPosts(q?: string) {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (supabase as any)
+  let query = (supabase as any)
     .from('board_posts')
     .select('id, title, view_count, created_at, profile:profiles!board_posts_user_id_fkey(username), board_comments(count)')
     .order('created_at', { ascending: false })
+  if (q) query = query.ilike('title', `%${q}%`)
+  const { data } = await query
   return (data ?? []) as Array<BoardPost & { board_comments: { count: number }[] }>
 }
 
-export default async function BoardPage() {
-  const posts = await fetchBoardPosts()
+export default async function BoardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
+  const { q } = await searchParams
+  const posts = await fetchBoardPosts(q)
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
       {/* 헤더 */}
-      <div className="flex items-end justify-between">
+      <div className="flex items-end justify-between flex-wrap gap-4">
         <div>
           <h1 className="font-serif text-2xl text-stone-900">자유게시판</h1>
         </div>
         <div className="flex items-center gap-3">
+          <Suspense>
+            <SearchInput placeholder="제목 검색" />
+          </Suspense>
           <Link
             href="/board/my"
             className="text-xs tracking-[0.15em] uppercase text-stone-500 border border-stone-200 rounded-full px-4 py-2 hover:border-stone-400 hover:text-stone-700 transition-colors"
@@ -46,7 +58,7 @@ export default async function BoardPage() {
       </div>
 
       {/* 목록 */}
-      <div className="mt-[100px]">
+      <div className="mt-10">
         {/* 컬럼 헤더 */}
         <div className="flex items-center justify-between py-3 px-3 -mx-3 border-y border-stone-200 bg-stone-50/50 text-xs tracking-wider text-stone-500 uppercase">
           <div className="flex items-center gap-4 min-w-0">
@@ -61,7 +73,9 @@ export default async function BoardPage() {
         </div>
 
         {posts.length === 0 ? (
-          <p className="text-sm text-stone-400 text-center py-20">아직 게시글이 없습니다.</p>
+          <p className="text-sm text-stone-400 text-center py-20">
+            {q ? `"${q}" 검색 결과가 없습니다.` : '아직 게시글이 없습니다.'}
+          </p>
         ) : (
           <div className="divide-y divide-stone-100">
             {posts.map((post, i) => {

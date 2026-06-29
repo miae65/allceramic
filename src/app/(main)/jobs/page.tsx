@@ -1,6 +1,8 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { SearchInput } from '@/components/ui/SearchInput'
 import type { JobPost } from '@/types'
 
 export const metadata: Metadata = {
@@ -13,20 +15,27 @@ type ListItem = JobPost & {
   job_comments: { count: number }[]
 }
 
-async function fetchJobs() {
+async function fetchJobs(q?: string) {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (supabase as any)
+  let query = (supabase as any)
     .from('job_posts')
     .select(
       'id, kind, title, position, region, work_type, company_name, deadline, view_count, created_at, profile:profiles!job_posts_user_id_fkey(username), job_comments(count)'
     )
     .order('created_at', { ascending: false })
+  if (q) query = query.ilike('title', `%${q}%`)
+  const { data } = await query
   return (data ?? []) as ListItem[]
 }
 
-export default async function JobsPage() {
-  const posts = await fetchJobs()
+export default async function JobsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
+  const { q } = await searchParams
+  const posts = await fetchJobs(q)
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
@@ -36,6 +45,9 @@ export default async function JobsPage() {
           <p className="text-xs text-stone-400 mt-2">세라믹 업계의 채용 정보와 구직 소식을 나누는 공간입니다.</p>
         </div>
         <div className="flex items-center gap-3">
+          <Suspense>
+            <SearchInput placeholder="제목 검색" />
+          </Suspense>
           <Link
             href="/jobs/my"
             className="text-xs tracking-[0.15em] uppercase text-stone-500 border border-stone-200 rounded-full px-4 py-2 hover:border-stone-400 hover:text-stone-700 transition-colors"
@@ -67,7 +79,9 @@ export default async function JobsPage() {
         </div>
 
         {posts.length === 0 ? (
-          <p className="text-sm text-stone-400 text-center py-20">아직 게시글이 없습니다.</p>
+          <p className="text-sm text-stone-400 text-center py-20">
+            {q ? `"${q}" 검색 결과가 없습니다.` : '아직 게시글이 없습니다.'}
+          </p>
         ) : (
           <div className="divide-y divide-stone-100">
             {posts.map((post, i) => {
