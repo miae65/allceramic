@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { SearchInput } from '@/components/ui/SearchInput'
+import { Pagination } from '@/components/ui/Pagination'
 import type { JobPost } from '@/types'
 
 export const metadata: Metadata = {
@@ -11,31 +12,38 @@ export const metadata: Metadata = {
   openGraph: { title: '구인구직 | Allceramic', description: '도예 공방·브랜드 구인 및 도예인 구직 정보' },
 }
 
-type ListItem = JobPost & {
-  job_comments: { count: number }[]
-}
+const PAGE_SIZE = 15
 
-async function fetchJobs(q?: string) {
+type ListItem = JobPost & { job_comments: { count: number }[] }
+
+async function fetchJobs(q?: string, page = 1) {
   const supabase = await createClient()
+  const from = (page - 1) * PAGE_SIZE
+  const to = from + PAGE_SIZE - 1
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from('job_posts')
     .select(
-      'id, kind, title, position, region, work_type, company_name, deadline, view_count, created_at, profile:profiles!job_posts_user_id_fkey(username), job_comments(count)'
+      'id, kind, title, position, region, work_type, company_name, deadline, view_count, created_at, profile:profiles!job_posts_user_id_fkey(username), job_comments(count)',
+      { count: 'exact' }
     )
     .order('created_at', { ascending: false })
+    .range(from, to)
   if (q) query = query.ilike('title', `%${q}%`)
-  const { data } = await query
-  return (data ?? []) as ListItem[]
+  const { data, count } = await query
+  return { posts: (data ?? []) as ListItem[], total: count ?? 0 }
 }
 
 export default async function JobsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<{ q?: string; page?: string }>
 }) {
-  const { q } = await searchParams
-  const posts = await fetchJobs(q)
+  const { q, page: pageStr } = await searchParams
+  const page = Math.max(1, parseInt(pageStr ?? '1', 10) || 1)
+  const { posts, total } = await fetchJobs(q, page)
+  const totalPages = Math.ceil(total / PAGE_SIZE)
+  const offset = (page - 1) * PAGE_SIZE
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
@@ -66,7 +74,6 @@ export default async function JobsPage({
       </div>
 
       <div className="mt-10">
-        {/* 컬럼 헤더 */}
         <div className="flex items-center justify-between py-3 px-3 -mx-3 border-y border-stone-200 bg-stone-50/50 text-xs tracking-wider text-stone-500 uppercase">
           <div className="flex items-center gap-4 min-w-0">
             <span className="w-5 shrink-0" />
@@ -86,35 +93,37 @@ export default async function JobsPage({
           </p>
         ) : (
           <div className="divide-y divide-stone-100">
-            {posts.map((post, i) => {
-              return (
-                <Link
-                  key={post.id}
-                  href={`/jobs/${post.id}`}
-                  className="flex items-center justify-between py-4 group hover:bg-stone-50 -mx-3 px-3 rounded transition-colors"
-                >
-                  <div className="flex items-center gap-4 min-w-0">
-                    <span className="text-xs text-stone-300 w-5 text-right shrink-0">{i + 1}</span>
-                    <span className="text-sm text-stone-800 group-hover:text-stone-600 transition-colors truncate">
-                      {post.title}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4 shrink-0 ml-4">
-                    <span className="text-xs text-stone-400 hidden sm:block w-20 text-center truncate">{post.region}</span>
-                    <span className="text-xs text-stone-400 hidden md:block w-20 text-center truncate">{post.work_type}</span>
-                    <span className="text-xs text-stone-500 w-12 text-center tabular-nums">
-                      {post.deadline
-                        ? new Date(post.deadline).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })
-                        : '-'}
-                    </span>
-                    <span className="text-xs text-stone-500 hidden sm:block w-12 text-right tabular-nums">{post.view_count}</span>
-                  </div>
-                </Link>
-              )
-            })}
+            {posts.map((post, i) => (
+              <Link
+                key={post.id}
+                href={`/jobs/${post.id}`}
+                className="flex items-center justify-between py-4 group hover:bg-stone-50 -mx-3 px-3 rounded transition-colors"
+              >
+                <div className="flex items-center gap-4 min-w-0">
+                  <span className="text-xs text-stone-300 w-5 text-right shrink-0">{offset + i + 1}</span>
+                  <span className="text-sm text-stone-800 group-hover:text-stone-600 transition-colors truncate">
+                    {post.title}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 shrink-0 ml-4">
+                  <span className="text-xs text-stone-400 hidden sm:block w-20 text-center truncate">{post.region}</span>
+                  <span className="text-xs text-stone-400 hidden md:block w-20 text-center truncate">{post.work_type}</span>
+                  <span className="text-xs text-stone-500 w-12 text-center tabular-nums">
+                    {post.deadline
+                      ? new Date(post.deadline).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })
+                      : '-'}
+                  </span>
+                  <span className="text-xs text-stone-500 hidden sm:block w-12 text-right tabular-nums">{post.view_count}</span>
+                </div>
+              </Link>
+            ))}
           </div>
         )}
       </div>
+
+      <Suspense>
+        <Pagination currentPage={page} totalPages={totalPages} />
+      </Suspense>
     </div>
   )
 }

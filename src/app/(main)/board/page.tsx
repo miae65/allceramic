@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { SearchInput } from '@/components/ui/SearchInput'
+import { Pagination } from '@/components/ui/Pagination'
 import type { BoardPost } from '@/types'
 
 export const metadata: Metadata = {
@@ -11,25 +12,33 @@ export const metadata: Metadata = {
   openGraph: { title: '자유게시판 | Allceramic', description: '도예 커뮤니티 자유게시판' },
 }
 
-async function fetchBoardPosts(q?: string) {
+const PAGE_SIZE = 15
+
+async function fetchBoardPosts(q?: string, page = 1) {
   const supabase = await createClient()
+  const from = (page - 1) * PAGE_SIZE
+  const to = from + PAGE_SIZE - 1
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from('board_posts')
-    .select('id, title, view_count, created_at, profile:profiles!board_posts_user_id_fkey(username), board_comments(count)')
+    .select('id, title, view_count, created_at, profile:profiles!board_posts_user_id_fkey(username), board_comments(count)', { count: 'exact' })
     .order('created_at', { ascending: false })
+    .range(from, to)
   if (q) query = query.ilike('title', `%${q}%`)
-  const { data } = await query
-  return (data ?? []) as Array<BoardPost & { board_comments: { count: number }[] }>
+  const { data, count } = await query
+  return { posts: (data ?? []) as Array<BoardPost & { board_comments: { count: number }[] }>, total: count ?? 0 }
 }
 
 export default async function BoardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<{ q?: string; page?: string }>
 }) {
-  const { q } = await searchParams
-  const posts = await fetchBoardPosts(q)
+  const { q, page: pageStr } = await searchParams
+  const page = Math.max(1, parseInt(pageStr ?? '1', 10) || 1)
+  const { posts, total } = await fetchBoardPosts(q, page)
+  const totalPages = Math.ceil(total / PAGE_SIZE)
+  const offset = (page - 1) * PAGE_SIZE
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
@@ -90,7 +99,7 @@ export default async function BoardPage({
                   className="flex items-center justify-between py-4 group hover:bg-stone-50 -mx-3 px-3 rounded transition-colors"
                 >
                   <div className="flex items-center gap-4 min-w-0">
-                    <span className="text-xs text-stone-300 w-5 text-right shrink-0">{i + 1}</span>
+                    <span className="text-xs text-stone-300 w-5 text-right shrink-0">{offset + i + 1}</span>
                     <span className="text-sm text-stone-800 group-hover:text-stone-600 transition-colors truncate">
                       {post.title}
                     </span>
@@ -111,6 +120,10 @@ export default async function BoardPage({
           </div>
         )}
       </div>
+
+      <Suspense>
+        <Pagination currentPage={page} totalPages={totalPages} />
+      </Suspense>
     </div>
   )
 }
