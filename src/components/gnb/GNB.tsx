@@ -92,17 +92,20 @@ export function GNB() {
             <Link
               href="/favorites"
               aria-label="즐겨찾기"
+              onClick={() => setMobileMenuOpen(false)}
               className={`text-stone-500 hover:text-stone-900 transition-colors ${
                 pathname === '/favorites' ? 'text-stone-900' : ''
               }`}
             >
               <BookmarkIcon className="w-5 h-5" />
             </Link>
-            <AuthButtons
-              onUploadClick={tryOpenUpload}
-              onAuthRequired={() => setAuthOpen(true)}
-              onSettingsClick={() => handleProtected(() => setSettingsOpen(true))}
-            />
+            <div className="contents" onClick={() => setMobileMenuOpen(false)}>
+              <AuthButtons
+                onUploadClick={tryOpenUpload}
+                onAuthRequired={() => setAuthOpen(true)}
+                onSettingsClick={() => handleProtected(() => setSettingsOpen(true))}
+              />
+            </div>
             {/* 모바일 햄버거 */}
             <button
               type="button"
@@ -132,22 +135,20 @@ export function GNB() {
               className="md:hidden fixed inset-0 top-16 z-0"
               onClick={() => setMobileMenuOpen(false)}
             />
-            <div className="md:hidden absolute top-16 left-0 right-0 bg-white border-b border-stone-100 shadow-sm z-10">
-              <div className="flex flex-col py-2">
-                {navItems.map(item => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`px-6 py-3 text-sm transition-colors ${
-                      item.isActive
-                        ? 'text-stone-900 font-medium bg-stone-50'
-                        : 'text-stone-600 hover:bg-stone-50'
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
+            <div className="md:hidden absolute top-[4.5rem] right-4 w-44 bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden z-10">
+              {navItems.map(item => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`block px-4 py-3 text-sm transition-colors ${
+                    item.isActive
+                      ? 'text-stone-900 bg-stone-50'
+                      : 'text-stone-600 hover:bg-stone-50'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
             </div>
           </>
         )}
