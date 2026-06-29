@@ -1,11 +1,11 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { ChevronLeftIcon } from '@/components/ui/icons'
 import { ExhibitionCommentSection } from '@/components/exhibition/ExhibitionCommentSection'
 import { ExhibitionPostActions } from '@/components/exhibition/ExhibitionPostActions'
+import { ExhibitionImageGrid } from '@/components/exhibition/ExhibitionImageGrid'
 import type { ExhibitionPost, ExhibitionComment } from '@/types'
 import { isAdmin } from '@/lib/admin'
 import { exhibitionStatus, formatPeriod } from '@/lib/exhibition'
@@ -138,13 +138,7 @@ export default async function ExhibitionPostDetailPage({ params }: { params: Pro
         )}
 
         {post.image_urls && post.image_urls.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 py-6">
-            {post.image_urls.map((url, i) => (
-              <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="relative aspect-square bg-stone-100 rounded-lg overflow-hidden">
-                <Image src={url} alt={`첨부 이미지 ${i + 1}`} fill sizes="(max-width: 640px) 50vw, 33vw" unoptimized className="object-cover hover:opacity-90 transition-opacity" />
-              </a>
-            ))}
-          </div>
+          <ExhibitionImageGrid urls={post.image_urls} title={post.title} />
         )}
 
         <div className="py-6 text-sm text-stone-700 whitespace-pre-wrap leading-relaxed min-h-[120px]">
