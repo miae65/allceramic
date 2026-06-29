@@ -146,14 +146,22 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
           {/* 좋아요 / 공유 */}
           <PostActions likeCount={post.like_count} postId={post.id} isLiked={isLiked} />
 
-          {/* 본인 글 삭제 */}
+          {/* 본인 글 수정/삭제 */}
           {isOwn && (
-            <DeletePostButton
-              postId={post.id}
-              ownerId={post.user_id}
-              imagePaths={imagePaths}
-              redirectTo={redirectTo}
-            />
+            <div className="flex items-center gap-1">
+              <Link
+                href={`/post/${post.id}/edit`}
+                className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-700 transition-colors py-3 pr-3"
+              >
+                수정
+              </Link>
+              <DeletePostButton
+                postId={post.id}
+                ownerId={post.user_id}
+                imagePaths={imagePaths}
+                redirectTo={redirectTo}
+              />
+            </div>
           )}
 
           {/* 댓글 */}
