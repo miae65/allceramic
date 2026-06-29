@@ -87,7 +87,7 @@ export default async function InfoPage({
                   className="flex items-center justify-between py-4 group hover:bg-stone-50 -mx-3 px-3 rounded transition-colors"
                 >
                   <div className="flex items-center gap-4 min-w-0">
-                    <span className="text-xs text-stone-300 w-5 text-right shrink-0">{posts.length - i}</span>
+                    <span className="text-xs text-stone-300 w-5 text-right shrink-0">{i + 1}</span>
                     <span className="text-sm text-stone-800 group-hover:text-stone-600 transition-colors truncate">
                       {post.title}
                     </span>
