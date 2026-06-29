@@ -148,7 +148,7 @@ export default async function ExhibitionPostDetailPage({ params }: { params: Pro
         )}
 
         <div className="py-6 text-sm text-stone-700 whitespace-pre-wrap leading-relaxed min-h-[120px]">
-          {post.content}
+          {renderWithLinks(post.content)}
         </div>
       </article>
 
@@ -157,6 +157,25 @@ export default async function ExhibitionPostDetailPage({ params }: { params: Pro
       </div>
     </div>
   )
+}
+
+function renderWithLinks(text: string) {
+  const urlPattern = /https?:\/\/[^\s]+/g
+  const parts: React.ReactNode[] = []
+  let lastIndex = 0
+  let match
+  while ((match = urlPattern.exec(text)) !== null) {
+    if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index))
+    parts.push(
+      <a key={match.index} href={match[0]} target="_blank" rel="noopener noreferrer"
+        className="text-stone-500 underline underline-offset-2 hover:text-stone-800 break-all transition-colors">
+        {match[0]}
+      </a>
+    )
+    lastIndex = match.index + match[0].length
+  }
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex))
+  return parts
 }
 
 function Meta({ label, value }: { label: string; value: React.ReactNode }) {

@@ -44,6 +44,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'cdn.imweb.me',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.museum.go.kr',
+      },
     ],
   },
 }
