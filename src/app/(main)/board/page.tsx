@@ -37,6 +37,7 @@ export default async function BoardPage({
       <div className="flex items-end justify-between flex-wrap gap-4">
         <div>
           <h1 className="font-serif text-2xl text-stone-900">자유게시판</h1>
+          <p className="text-xs text-stone-400 mt-2">자유롭게 정보를 공유하는 공간입니다.</p>
         </div>
         <div className="flex items-center gap-3">
           <Suspense>
